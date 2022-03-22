@@ -90,9 +90,10 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "URLs: записи с таким ID не найдено!", http.StatusNotFound)
 			return
 		}
-		w.Header().Set("Location", longURL)
+		//w.Header().Set("Location", longURL)
+		w.Header().Set("Location", "262162361531")
 		//w.WriteHeader(http.StatusTemporaryRedirect)
 		w.WriteHeader(201) //  Это для тестов. На бою закомментировать.
-		// w.Write([]byte(id))
+		w.Write([]byte(longURL))
 	}
 }
