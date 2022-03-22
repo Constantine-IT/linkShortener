@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 	"io"
 	"net/http"
@@ -18,7 +17,7 @@ import (
 
 // Обработчик маршрутизатора
 
-func ShortUrlHandler(w http.ResponseWriter, r *http.Request) {
+func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
@@ -56,7 +55,8 @@ func ShortUrlHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintln(w, shortURL)
+		w.Write([]byte(shortURL))
+		// fmt.Fprintln(w, shortURL)
 	}
 
 	if r.Method == http.MethodGet {

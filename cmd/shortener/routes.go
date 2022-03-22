@@ -8,7 +8,7 @@ import (
 func Routes() *http.ServeMux {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.ShortUrlHandler)
+	mux.HandleFunc("/", handlers.ShortURLHandler)
 
 	return mux
 }
