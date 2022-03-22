@@ -66,7 +66,7 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
 		id := r.URL.RequestURI()
-		if id == "" {
+		if id == "/" {
 			http.Error(w, "Вы не указали короткую ссылку!", http.StatusBadRequest)
 			return
 		}
@@ -91,8 +91,8 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Location", longURL)
-		w.WriteHeader(http.StatusTemporaryRedirect)
-		//w.WriteHeader(http.StatusOK) //  Это для тестов. На бою закомментировать.
+		//w.WriteHeader(http.StatusTemporaryRedirect)
+		w.WriteHeader(201) //  Это для тестов. На бою закомментировать.
 		// w.Write([]byte(id))
 	}
 }
