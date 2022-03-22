@@ -40,11 +40,13 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Некорректный URL, введите заново!", http.StatusBadRequest)
 			return
 		}
+		schemeURL := u.Scheme
 		hostURL := u.Host
 		// пока в качестве ID короткой ссылки берем текущее локальное время в наносекундах
 		// потом перепишем на использование HASH функции от аргумента - входящего URL
 		hashURL := strconv.FormatInt(time.Now().UnixNano(), 10)
 		shortURL := strings.Join([]string{hostURL, hashURL}, "/")
+		shortURL = strings.Join([]string{schemeURL, shortURL}, "://")
 		// Длинный URL храним в исходном виде без изменений
 		// короткий URL храним без префиксов, в виде домен/HASH
 
@@ -67,16 +69,18 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Вы не указали короткую ссылку!", http.StatusBadRequest)
 			return
 		}
-		u, err := url.Parse(string(id))
+		u, err := url.Parse(id)
 		if err != nil {
 			http.Error(w, "Некорректный URL, введите заново!", http.StatusBadRequest)
 			return
 		}
+		schemeURL := u.Scheme
 		hostURL := u.Host
 		hashURL := u.Path
 		// предварительно режем из короткого URL все префиксы и другую муть, так как мы его в таком виде и храним.
 		// оставляем только домен и HASH
 		shortURL := strings.Join([]string{hostURL, hashURL}, "")
+		shortURL = strings.Join([]string{schemeURL, shortURL}, "://")
 		// вызов метода-запроса, выдающего созраненный URL по его сокращенному виду.
 		longURL, err := models.Get(shortURL)
 		if err != nil {
@@ -84,7 +88,7 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Location", longURL)
-		w.WriteHeader(http.StatusTemporaryRedirect)
-		// w.WriteHeader(http.StatusOK) //  Это для тестов. На бою закомментировать.
+		//w.WriteHeader(http.StatusTemporaryRedirect)
+		w.WriteHeader(http.StatusOK) //  Это для тестов. На бою закомментировать.
 	}
 }
