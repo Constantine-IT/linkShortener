@@ -54,6 +54,8 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Не могу запомнить URL!", http.StatusInternalServerError)
 			return
 		}
+
+		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(shortURL))
 		// fmt.Fprintln(w, shortURL)
