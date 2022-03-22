@@ -5,7 +5,9 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -23,47 +25,64 @@ func ShortUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method != http.MethodPost && r.Method != http.MethodGet {
 		w.Header().Set("Allow", "GET or POST")
-		//w.Header().Set("Allow", http.MethodGet)
-		http.Error(w, "Метод запрещен!", 405)
+		http.Error(w, "Метод запрещен!", http.StatusMethodNotAllowed)
 		return
 	}
 
 	if r.Method == http.MethodPost {
-		inUrl, err := io.ReadAll(r.Body) // читаем тело запроса
-
-		if err != nil || inUrl == nil {
-			http.Error(w, "Некорректный URL, введите заново!", 400)
+		defer r.Body.Close()
+		inURL, err := io.ReadAll(r.Body)
+		if err != nil || inURL == nil {
+			http.Error(w, "Некорректный URL, введите заново!", http.StatusBadRequest)
 			return
 		}
+		u, err := url.Parse(string(inURL))
+		if err != nil {
+			http.Error(w, "Некорректный URL, введите заново!", http.StatusBadRequest)
+			return
+		}
+		hostURL := u.Host
 		// пока в качестве ID короткой ссылки берем текущее локальное время в наносекундах
 		// потом перепишем на использование HASH функции от аргумента - входящего URL
-		shortUrl := strconv.FormatInt(time.Now().UnixNano(), 10)
-		longUrl := string(inUrl)
+		hashURL := strconv.FormatInt(time.Now().UnixNano(), 10)
+		shortURL := strings.Join([]string{hostURL, hashURL}, "/")
+		// Длинный URL храним в исходном виде без изменений
+		// короткий URL храним без префиксов, в виде домен/HASH
 
 		//	вызов метода-вставки в структуру хранения связки ID<==>URL
-		err = models.Insert(shortUrl, longUrl)
+		err = models.Insert(shortURL, string(inURL))
 		if err != nil {
-			http.Error(w, "Не могу запомнить URL!", 500)
+			http.Error(w, "Не могу запомнить URL!", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(201)
-		fmt.Fprintln(w, shortUrl)
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprintln(w, shortURL)
 	}
 
 	if r.Method == http.MethodGet {
 		id := r.URL.Query().Get("id")
 		if id == "" {
-			http.Error(w, "Вы не указали короткую ссылку!", 400)
+			http.Error(w, "Вы не указали короткую ссылку!", http.StatusBadRequest)
 			return
 		}
-		// вызов метода-запроса, выдающего созраненный URL по его ID
-		longUrl, err := models.Get(id)
+		u, err := url.Parse(string(id))
 		if err != nil {
-			http.Error(w, "URLs: записи с таким ID не найдено!", 404)
+			http.Error(w, "Некорректный URL, введите заново!", http.StatusBadRequest)
 			return
 		}
-		w.Header().Set("Location", longUrl)
-		w.WriteHeader(307)
+		hostURL := u.Host
+		hashURL := u.Path
+		// предварительно режем из короткого URL все префиксы и другую муть, так как мы его в таком виде и храним.
+		// оставляем только домен и HASH
+		shortURL := strings.Join([]string{hostURL, hashURL}, "")
+		// вызов метода-запроса, выдающего созраненный URL по его сокращенному виду.
+		longURL, err := models.Get(shortURL)
+		if err != nil {
+			http.Error(w, "URLs: записи с таким ID не найдено!", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Location", longURL)
+		w.WriteHeader(http.StatusTemporaryRedirect)
+		// w.WriteHeader(http.StatusOK) //  Это для тестов. На бою закомментировать.
 	}
-	//	w.Write([]byte("Привет, это сервис изготовления коротких ссылок!"))
 }
