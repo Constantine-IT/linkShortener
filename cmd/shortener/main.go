@@ -1,18 +1,19 @@
 package main
 
 import (
+	h "github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
 	"log"
 	"net/http"
 )
 
 func main() {
-	addr := "localhost:8080"
+	// Addr := "127.0.0.1:8080"
 
 	srv := &http.Server{
-		Addr:    addr,
+		Addr:    h.Addr,
 		Handler: Routes(),
 	}
 
-	log.Printf("Запуск сервера на %s", addr)
+	log.Printf("Запуск сервера на %s", h.Addr)
 	log.Fatal(srv.ListenAndServe())
 }

@@ -9,13 +9,13 @@ import "errors"
 var urlTable = make(map[string]string) // таблица для хранения URL
 
 // Методы работы с моделью данных
-// Insert - Метод для создания связки короткого и длинного URL.
+// Insert - Метод для вставки в базу связки короткого и длинного URL.
 func Insert(shortURL, longURL string) error {
 	urlTable[shortURL] = longURL
 	return nil
 }
 
-// Get - Метод для возвращения длинного URL по его идентификатору ID.
+// Get - Метод для нахождения длинного URL по короткому URL.
 func Get(shortURL string) (string, error) {
 
 	longURL := urlTable[shortURL]
