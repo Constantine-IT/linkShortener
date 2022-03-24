@@ -12,10 +12,8 @@ import (
 
 var Addr = "127.0.0.1:8080"
 
-/* Эндпоинт POST / принимает в теле запроса строку URL для сокращения
-и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле. */
-/* Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL
-и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.  */
+/* Эндпоинт POST / принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
+Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.  */
 
 // Обработчик маршрутизатора
 
@@ -34,8 +32,13 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		defer r.Body.Close()
 		inURL, err := io.ReadAll(r.Body)
-		if err != nil || inURL == nil {
-			http.Error(w, "Некорректный URL, не могу прочесть!", http.StatusBadRequest)
+		longURL := string(inURL)
+		if err != nil || longURL == "" {
+			http.Error(w, "Отсутствует URL в теле запроса!", http.StatusBadRequest)
+			return
+		}
+		if strings.ContainsAny(longURL, " !,*\n") {
+			http.Error(w, "URL в теле запроса содержит недопустимые символы!", http.StatusBadRequest)
 			return
 		}
 
@@ -44,42 +47,34 @@ func ShortURLHandler(w http.ResponseWriter, r *http.Request) {
 		hashURL := strconv.FormatInt(time.Now().UnixNano(), 10)
 
 		// длинный URL храним в исходном виде без изменений, как считали в теле запроса.
+		// для короткого URL храним только HASH - так меньше места занимает и быстрее поиск идет
 		// вызов метода-вставки в структуру хранения связки HASH_ID<==>URL
-		err = models.Insert(hashURL, string(inURL))
+		err = models.Insert(hashURL, longURL)
 		if err != nil {
 			http.Error(w, "Не могу запомнить URL!", http.StatusInternalServerError)
 			return
 		}
-
-		/*
-			parsURL, err := url.Parse(string(inURL))
-			if err != nil {
-				http.Error(w, "Некорректный URL, не могу распарсить!", http.StatusBadRequest)
-				return
-			}
-			shortURL := strings.Join([]string{parsURL.Scheme, parsURL.Host}, "://") // соединяем префикс и домен через разделитель ://
-			shortURL = strings.Join([]string{shortURL, hashURL}, "/")               // через / добавляем HASH - это и есть короткий URL
-		*/
+		// Изготавливаем короткий URL из адреса нашего сервера и HASH
 		shortURL := strings.Join([]string{"http:/", Addr, hashURL}, "/")
+
+		// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в виде текста
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(shortURL)) // вставляем короткий URL в тело ответа в виде текста
+		w.Write([]byte(shortURL))
 	}
 
 	if r.Method == http.MethodGet {
-		id := r.URL.RequestURI()
-		if id == "/" {
-			http.Error(w, "Вы ввели не полный URL!", http.StatusBadRequest)
-			return
-		}
-		id = strings.Trim(id, "/") // Обрезаем ведущий опостроф в PATH URL
-		longURL, err := models.Get(id)
-		if err != nil {
+		id := r.URL.RequestURI()       // Вырезаем PATH из входящего адреса запроса
+		id = strings.Trim(id, "/")     // Обрезаем ведущий SLASH в PATH
+		longURL, err := models.Get(id) // Находим в базе URL соответствующий запрошенному HASH
+		if err != nil || longURL == "" {
 			http.Error(w, "В нашей базе такого URL не найдено!", http.StatusNotFound)
 			return
 		}
+
+		// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле location и делая редирект на него
 		w.Header().Set("Location", longURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		//w.WriteHeader(201) //  Это для тестов. На бою закомментировать.
+		//w.WriteHeader(201) //  Это для тестов в POSTMAN. На бою закомментировать.
 	}
 }

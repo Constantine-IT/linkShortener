@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-	// Addr := "127.0.0.1:8080"
 
 	srv := &http.Server{
 		Addr:    h.Addr,
