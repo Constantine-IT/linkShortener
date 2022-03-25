@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +12,7 @@ import (
 )
 
 func TestShortURLHandler(t *testing.T) {
+
 	type want struct {
 		inBetweenStatusCode  int
 		inBetweenContentType string
@@ -22,15 +23,17 @@ func TestShortURLHandler(t *testing.T) {
 		name               string
 		initialRequest     string
 		initialRequestType string
+		body               string
 		secondRequestType  string
-		body               io.Reader
 		want               want
 	}{
 		{
-			name:               "Going through test #1",
+			name: "Going through test #1",
+			//	get the URL, create a short URL from it and send it to the client,
+			//	then get short URL from client and response to him with initial URL
 			initialRequest:     "/",
 			initialRequestType: "POST",
-			body:               strings.NewReader("http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8"),
+			body:               "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
 			secondRequestType:  "GET",
 			want: want{
 				inBetweenStatusCode:  201,
@@ -42,29 +45,41 @@ func TestShortURLHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			firstRequest := httptest.NewRequest(tt.initialRequestType, tt.initialRequest, tt.body)
-			w1 := httptest.NewRecorder()
-			h1 := http.HandlerFunc(ShortURLHandler)
-			h1.ServeHTTP(w1, firstRequest)
-			firstResult := w1.Result()
+			r := Routes()
+			ts := httptest.NewServer(r)
+			defer ts.Close()
 
-			assert.Equal(t, tt.want.inBetweenStatusCode, firstResult.StatusCode)
-			assert.Equal(t, tt.want.inBetweenContentType, firstResult.Header.Get("Content-Type"))
+			resp, body := testRequest(t, ts, tt.initialRequestType, tt.initialRequest, tt.body)
+			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
+			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
-			inURL, err := ioutil.ReadAll(firstResult.Body)
-			shortURL := string(inURL)
-			require.NoError(t, err)
-			err = firstResult.Body.Close()
-			require.NoError(t, err)
+			//в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
+			body = strings.TrimPrefix(body, "http://")
+			body = strings.TrimPrefix(body, Addr)
 
-			secondRequest := httptest.NewRequest(tt.secondRequestType, shortURL, nil)
-			w2 := httptest.NewRecorder()
-			h2 := http.HandlerFunc(ShortURLHandler)
-			h2.ServeHTTP(w2, secondRequest)
-			secondResult := w2.Result()
-
-			assert.Equal(t, tt.want.finalStatusCode, secondResult.StatusCode)
-			assert.Equal(t, tt.want.location, secondResult.Header.Get("Location"))
+			resp, body = testRequest(t, ts, tt.secondRequestType, body, "")
+			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
+			assert.Equal(t, tt.want.location, resp.Header.Get("Location"))
 		})
 	}
+}
+
+func testRequest(t *testing.T, ts *httptest.Server, method, path string, body string) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, strings.NewReader(body))
+	require.NoError(t, err)
+
+	http.DefaultClient.CheckRedirect = func(req *http.Request, previous []*http.Request) error {
+		if len(previous) != 0 { //	В случае редиректа, блокируем его и возвращаем последний response
+			return errors.New("net/http: use last response")
+		}
+		return nil
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	return resp, string(respBody)
 }

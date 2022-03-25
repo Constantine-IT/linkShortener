@@ -10,7 +10,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:    h.Addr,
-		Handler: Routes(),
+		Handler: h.Routes(),
 	}
 
 	log.Printf("Запуск сервера на %s", h.Addr)
