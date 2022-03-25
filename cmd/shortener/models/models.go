@@ -20,7 +20,7 @@ func Get(shortURL string) (string, error) {
 
 	longURL := urlTable[shortURL]
 	if longURL == "" {
-		return longURL, errors.New("В списке сохранённых URL подходящей записи не найдено!")
+		return longURL, errors.New("url not found")
 	}
 	return longURL, nil
 }

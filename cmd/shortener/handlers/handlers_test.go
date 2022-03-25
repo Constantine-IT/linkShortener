@@ -50,6 +50,7 @@ func TestShortURLHandler(t *testing.T) {
 			defer ts.Close()
 
 			resp, body := testRequest(t, ts, tt.initialRequestType, tt.initialRequest, tt.body)
+			defer resp.Body.Close()
 			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
@@ -57,7 +58,8 @@ func TestShortURLHandler(t *testing.T) {
 			body = strings.TrimPrefix(body, "http://")
 			body = strings.TrimPrefix(body, Addr)
 
-			resp, body = testRequest(t, ts, tt.secondRequestType, body, "")
+			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
+			defer resp.Body.Close()
 			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.location, resp.Header.Get("Location"))
 		})
@@ -75,7 +77,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body st
 		return nil
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, _ := http.DefaultClient.Do(req)
 	respBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 
