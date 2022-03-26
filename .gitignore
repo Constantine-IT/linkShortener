@@ -21,3 +21,7 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+
+# Файлы с расширением .DSStore -  не несут никакой полезной нагрузки для кода.
+*.DS_Store
+*.DSStore
