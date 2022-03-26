@@ -70,14 +70,17 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body st
 	req, err := http.NewRequest(method, ts.URL+path, strings.NewReader(body))
 	require.NoError(t, err)
 
+	ErrUseLastResponse := errors.New("net/http: use last response")
+
 	http.DefaultClient.CheckRedirect = func(req *http.Request, previous []*http.Request) error {
 		if len(previous) != 0 { //	В случае редиректа, блокируем его и возвращаем последний response
-			return errors.New("net/http: use last response")
+			return ErrUseLastResponse
 		}
 		return nil
 	}
 
 	resp, _ := http.DefaultClient.Do(req)
+
 	respBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 
