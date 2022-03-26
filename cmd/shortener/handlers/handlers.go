@@ -56,7 +56,7 @@ func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	longURL, flag := models.Get(hashURL) // Находим в базе URL соответствующий запрошенному HASH
-	if flag == false {
+	if !flag {
 		http.Error(w, "There is no such URL in our base!", http.StatusNotFound)
 		return
 	}
