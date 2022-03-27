@@ -20,7 +20,7 @@ var Addr = "127.0.0.1:8080"
 func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	inURL, err := io.ReadAll(r.Body)
-	if err != nil || inURL == nil {
+	if err != nil || len(inURL) == 0 {
 		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
 		return
 	}
