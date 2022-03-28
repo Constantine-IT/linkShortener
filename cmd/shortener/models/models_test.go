@@ -8,40 +8,40 @@ func TestInsert(t *testing.T) {
 	type want struct {
 		shortURL string
 		longURL  string
-		flag     bool
 	}
 	tests := []struct {
-		name  string
-		inURL string
-		want  want
+		name     string
+		shortURL string
+		longURL  string
+		want     want
 	}{
-		{name: "Simple insert test #1",
-			inURL: "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
+		{name: "test #1: POST longURL then GET wtih right shortURL",
+			shortURL: "SDFGHJK",
+			longURL:  "http://test.test/test1",
 			want: want{
-				shortURL: "ISQJSGDNXNSG",
-				longURL:  "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
-				flag:     true,
+				shortURL: "SDFGHJK",
+				longURL:  "http://test.test/test1",
 			},
 		},
-		{name: "Simple insert test #2",
-			inURL: "http://commemns.edu/374hwsjhsdhh/mmktfboj8/sdejhjwh",
+		{name: "test #2: POST longURL then GET wtih wrong shortURL",
+			shortURL: "QWERTYU",
+			longURL:  "http://test.test/test1",
 			want: want{
-				shortURL: "LKJSDJJSNNDJDFDJC",
-				longURL:  "http://abirvalg.shop/joowjubwjejjw/tfboj8/sdejhjwh1111111",
-				flag:     false,
+				shortURL: "UYTREWQ",
+				longURL:  "",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Insert(tt.want.shortURL, tt.inURL)
+			Insert(tt.shortURL, tt.longURL)
 			gotLongURL, gotFlag := Get(tt.want.shortURL)
 
-			if (gotLongURL != tt.want.longURL) && (gotFlag == tt.want.flag) {
-				t.Errorf("Get() longURL = %v, want %v", gotLongURL, tt.want.longURL)
+			if (gotFlag == true) && (gotLongURL != tt.want.longURL) {
+				t.Errorf("GET return longURL = %v, but want %v", gotLongURL, tt.want.longURL)
 			}
-			if (gotLongURL == tt.want.longURL) && (gotFlag != tt.want.flag) {
-				t.Errorf("Get() longURL the same, but gotFlag = %v, want %v", gotFlag, tt.want.flag)
+			if (gotFlag == false) && (gotLongURL != tt.want.longURL) {
+				t.Errorf("GET with not existing shortURL, then longURL is empty, but want %v", tt.want.longURL)
 			}
 		})
 	}
