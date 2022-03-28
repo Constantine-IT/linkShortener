@@ -20,6 +20,7 @@ func Routes() chi.Router {
 	r.Route("/", func(r chi.Router) {
 		// GET /HASH
 		r.Get("/{hashURL}", GetShortURLHandler)
+		r.Get("/", GetShortURLHandler)
 		// POST /
 		r.Post("/", CreateShortURLHandler)
 	})

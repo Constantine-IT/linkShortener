@@ -3,11 +3,13 @@ package handlers
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
 var Addr = "127.0.0.1:8080"
@@ -20,7 +22,7 @@ var Addr = "127.0.0.1:8080"
 func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	inURL, err := io.ReadAll(r.Body)
-	if err != nil || inURL == nil {
+	if err != nil || len(inURL) == 0 {
 		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
 		return
 	}
@@ -61,7 +63,7 @@ func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле location и делая редирект на него
+	// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле location и делая Redirect на него
 	w.Header().Set("Location", longURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 	//	w.WriteHeader(201) //  Это для тестов в POSTMAN. На бою закомментировать.

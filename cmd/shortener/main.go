@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	h "github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
 	"log"
 	"net/http"
 	"os"
+
+	h "github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
 )
 
 func main() {
