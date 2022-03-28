@@ -13,11 +13,5 @@ func Insert(shortURL, longURL string) {
 // Get - Метод для нахождения длинного URL по короткому URL.
 func Get(shortURL string) (longURL string, flag bool) {
 	longURL, ok := urlTable[shortURL]
-	/*	if ok {
-			return longURL, true
-		}
-
-	*/
 	return longURL, ok
-
 }
