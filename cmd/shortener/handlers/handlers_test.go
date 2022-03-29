@@ -29,7 +29,7 @@ func TestShortURLHandler(t *testing.T) {
 		want               want
 	}{
 		{
-			name: "Going through test #1",
+			name: "Going through test",
 			//	get the URL, create a short URL from it and send it to the client,
 			//	then get short URL from client and response to him with initial URL
 			initialRequest:     "/",
