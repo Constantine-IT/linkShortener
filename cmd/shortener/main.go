@@ -10,7 +10,8 @@ import (
 )
 
 func main() {
-	h.Addr = "127.0.0.1:8080" //	если не задан ServerAddress в server.cfg, то по умолчанию запускаем сервер на 127.0.0.1:8080
+	//если не задан ServerAddress в server.cfg, то по умолчанию запускаем сервер на 127.0.0.1:8080
+	h.Addr = "127.0.0.1:8080"
 	//	чтение файла конфигурации сервера	
 	config, err := os.ReadFile("server.cfg")
 	if err == nil {
