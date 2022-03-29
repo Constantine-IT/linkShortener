@@ -16,31 +16,27 @@
 # PUSH в репозиторий GitHub:
 
 Сначала создаем новую ветку:
-
+```
 git checkout -b increment-N
-
+```
 Помечаем всё что менялось с последнего PUSH:
-
+```
 git add .
-
 git commit -m 'increment-N'
-
+```
 Ну и делаем PUSH в Github:
-
+```
 git push --set-upstream origin increment-N
-  
+```  
 # В проекте используются доп. библиотеки TESTIFY и CHI
 
 Их надо предварительно зарегистрировать в модуле:
-
+```
 go get github.com/go-chi/chi/v5  
-
 go get github.com/go-chi/chi/v5/middleware
-
 go get github.com/stretchr/testify/assert
-
 go get github.com/stretchr/testify/require
-  
+```
 # Обновление шаблона
 
 Чтобы иметь возможность получать обновления автотестов и других частей шаблона выполните следующую команду:
