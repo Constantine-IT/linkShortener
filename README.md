@@ -1,7 +1,8 @@
 # cmd/shortener
 В данной директории будет содержаться код, который скомпилируется в бинарное приложение.
 
-Конфигурация для запуска сервера в файле serveer.cfg
+Конфигурация для запуска сервера в файле server.cfg
+
 Запускаем сервер командой go run .
 
 # go-musthave-shortener-tpl
@@ -27,3 +28,32 @@ git fetch template && git checkout template/main .github
 ```
 
 Затем добавьте полученные изменения в свой репозиторий.
+
+
+# PUSH в репозиторий GitHub%
+
+Сначала создаем новую ветку:
+
+git checkout -b increment<NUMBER>
+
+Помечаем всё что менялось с последнего PUSH:
+
+git add .
+
+git commit -m 'increment<NUMBER>'
+
+Ну и делаем PUSH в Github:
+
+git push --set-upstream origin increment<NUMBER>
+  
+# В проекте используются дополнительные библиотеки TESTIFY и CHI
+
+Их надо предварительно зарегистрировать в модуле:
+
+go get github.com/go-chi/chi/v5  
+
+go get github.com/go-chi/chi/v5/middleware
+
+go get github.com/stretchr/testify/assert
+
+go get github.com/stretchr/testify/require
