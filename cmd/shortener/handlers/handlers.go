@@ -12,7 +12,7 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
-var Addr = "127.0.0.1:8080"
+var Addr string
 
 /* Эндпоинт POST / принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.  */
@@ -34,7 +34,8 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
-	hashURL := fmt.Sprintf("%x", md5.Sum(inURL))
+	md5URL := md5.Sum(inURL)
+	hashURL := fmt.Sprintf("%X", md5URL[:4])
 
 	// вызов метода-вставки в структуру хранения связки HASH<==>URL
 	models.Insert(hashURL, longURL)

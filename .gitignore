@@ -5,8 +5,11 @@
 *.so
 *.dylib
 
-# DS_Store не нужно отслеживать изменения
+# файлы DS_Store не нужно отслеживать на изменения - они не влияют на код
 *.DS_Store
+.DS_Stor
+.DSStore
+.DS*
 
 # Test binary, built with `go test -c`
 *.test
