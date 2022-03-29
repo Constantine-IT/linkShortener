@@ -13,6 +13,34 @@
 1. Склонируйте репозиторий в любую подходящую директорию на вашем компьютере.
 2. В корне репозитория выполните команду `go mod init <name>` (где `<name>` - адрес вашего репозитория на GitHub без префикса `https://`) для создания модуля.
 
+# PUSH в репозиторий GitHub:
+
+Сначала создаем новую ветку:
+
+git checkout -b increment<n>
+
+Помечаем всё что менялось с последнего PUSH:
+
+git add .
+
+git commit -m 'increment<n>'
+
+Ну и делаем PUSH в Github:
+
+git push --set-upstream origin increment<n>
+  
+# В проекте используются доп. библиотеки TESTIFY и CHI
+
+Их надо предварительно зарегистрировать в модуле:
+
+go get github.com/go-chi/chi/v5  
+
+go get github.com/go-chi/chi/v5/middleware
+
+go get github.com/stretchr/testify/assert
+
+go get github.com/stretchr/testify/require
+  
 # Обновление шаблона
 
 Чтобы иметь возможность получать обновления автотестов и других частей шаблона выполните следующую команду:
@@ -28,32 +56,3 @@ git fetch template && git checkout template/main .github
 ```
 
 Затем добавьте полученные изменения в свой репозиторий.
-
-
-# PUSH в репозиторий GitHub%
-
-Сначала создаем новую ветку:
-
-git checkout -b increment<NUMBER>
-
-Помечаем всё что менялось с последнего PUSH:
-
-git add .
-
-git commit -m 'increment<NUMBER>'
-
-Ну и делаем PUSH в Github:
-
-git push --set-upstream origin increment<NUMBER>
-  
-# В проекте используются дополнительные библиотеки TESTIFY и CHI
-
-Их надо предварительно зарегистрировать в модуле:
-
-go get github.com/go-chi/chi/v5  
-
-go get github.com/go-chi/chi/v5/middleware
-
-go get github.com/stretchr/testify/assert
-
-go get github.com/stretchr/testify/require
