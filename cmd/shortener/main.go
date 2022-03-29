@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	h.Addr = "127.0.0.1:8080" //	адрес запуска HTTP-сервера. Значение по умолчанию.
 	//	чтение файла конфигурации
 	config, err := os.ReadFile("server.cfg")
 	if err == nil {
