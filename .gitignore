@@ -7,6 +7,9 @@
 
 # DS_Store не нужно отслеживать изменения
 *.DS_Store
+.DS_Store
+.DSStore
+.DS*
 
 # Test binary, built with `go test -c`
 *.test
