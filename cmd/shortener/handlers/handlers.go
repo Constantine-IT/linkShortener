@@ -34,7 +34,8 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
-	hashURL := fmt.Sprintf("%x", md5.Sum(inURL))
+	md5URL := md5.Sum(inURL)
+	hashURL := fmt.Sprintf("%X", md5URL[0:4])
 
 	// вызов метода-вставки в структуру хранения связки HASH<==>URL
 	models.Insert(hashURL, longURL)
