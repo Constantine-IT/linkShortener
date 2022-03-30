@@ -81,7 +81,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body st
 	}
 
 	resp, _ := http.DefaultClient.Do(req)
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:govet
 	respBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 

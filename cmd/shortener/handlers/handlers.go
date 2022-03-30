@@ -46,7 +46,7 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в виде текста
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(shortURL))
+	w.Write([]byte(shortURL)) //nolint:errcheck
 }
 
 func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
