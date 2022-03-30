@@ -81,11 +81,9 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body st
 	}
 
 	resp, _ := http.DefaultClient.Do(req)
-
+	defer resp.Body.Close()
 	respBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
-
-	defer resp.Body.Close()
 
 	return resp, string(respBody)
 }
