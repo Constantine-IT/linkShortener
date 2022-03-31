@@ -95,7 +95,7 @@ func TestResponseWithErrors(t *testing.T) {
 			name:        "test #7: Request with URL in JSON body",
 			request:     "/api/shorten",
 			requestType: "POST",
-			body:        "{\"url\":\"\"}",
+			body:        `{"url":""}`,
 			want: want{
 				statusCode:  http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
