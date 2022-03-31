@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -137,16 +136,17 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body st
 	req, err := http.NewRequest(method, ts.URL+path, strings.NewReader(body))
 	require.NoError(t, err)
 
-	ErrUseLastResponse := errors.New("net/http: use last response")
 	//	изменяем базовые политики redirect для HTTP-client - в случае редиректа, отменяем его и выдаём последний response
 	http.DefaultClient.CheckRedirect = func(req *http.Request, previous []*http.Request) error {
 		if len(previous) != 0 { //	В случае редиректа, блокируем его и возвращаем последний response
-			return ErrUseLastResponse
+			return http.ErrUseLastResponse
 		}
 		return nil
 	}
 
-	resp, _ := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	
 	respBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 
