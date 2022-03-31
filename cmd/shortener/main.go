@@ -11,7 +11,7 @@ import (
 
 func main() {
 	//если не задан ServerAddress в server.cfg, то по умолчанию запускаем сервер на 127.0.0.1:8080
-	srvAddr := h.Addr
+	srvAddr := "127.0.0.1:8080"
 	//	чтение файла конфигурации сервера
 	config, err := os.ReadFile("server.cfg")
 	if err == nil {
@@ -29,8 +29,6 @@ func main() {
 	if u, flag := os.LookupEnv("SERVER_ADDRESS"); flag {
 		srvAddr = u //	если SERVER_ADDRESS задан, то стартуем наш HTTP-сервер на этом адресе
 	}
-
-	h.Addr = srvAddr
 
 	if u, flag := os.LookupEnv("BASE_URL"); flag {
 		h.Addr = u //	если переменная среды BASE_URL задана, то используем её как адрес для сокращенного URL

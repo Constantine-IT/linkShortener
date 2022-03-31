@@ -65,7 +65,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 			body = Body.Result
 
 			//	в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
-			body = strings.TrimPrefix(body, "http://")
+			//body = strings.TrimPrefix(body, "http://")
 			body = strings.TrimPrefix(body, Addr)
 
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
@@ -120,7 +120,7 @@ func TestShortURLHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
 			//	в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
-			body = strings.TrimPrefix(body, "http://")
+			//body = strings.TrimPrefix(body, "http://")
 			body = strings.TrimPrefix(body, Addr)
 
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")

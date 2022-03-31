@@ -13,7 +13,7 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
-var Addr = "127.0.0.1:8080"
+var Addr = "http://127.0.0.1:8080"
 
 // Обработчики маршрутизатора
 
@@ -27,7 +27,7 @@ func saveShortURLlongURL(longURL string) string {
 	models.Insert(hashURL, longURL)
 
 	// Изготавливаем  shortURL из адреса нашего сервера и HASH
-	shortURL := strings.Join([]string{"http:/", Addr, hashURL}, "/")
+	shortURL := strings.Join([]string{Addr, hashURL}, "/")
 	return shortURL
 }
 
