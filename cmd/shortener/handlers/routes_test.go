@@ -91,6 +91,17 @@ func TestResponseWithErrors(t *testing.T) {
 				body:        "ShortURL param is missed\n",
 			},
 		},
+		{
+			name:        "test #7: Request with URL in JSON body",
+			request:     "/api/shorten",
+			requestType: "POST",
+			body:        "{\"url\":\"\"}",
+			want: want{
+				statusCode:  http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+				body:        "There is no URL in your request BODY!\n",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

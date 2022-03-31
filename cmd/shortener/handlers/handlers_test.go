@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +13,68 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestShortURL_JSONHandler(t *testing.T) {
+
+	type want struct {
+		inBetweenStatusCode  int
+		inBetweenContentType string
+		finalStatusCode      int
+		location             string
+	}
+	tests := []struct {
+		name               string
+		initialRequest     string
+		initialRequestType string
+		body               string
+		secondRequestType  string
+		want               want
+	}{
+		{
+			name: "Going through test #1 with URL in initial JSON POST",
+			//	get the URL, create a short URL from it and send it to the client,
+			//	then get short URL from client and response to him with initial URL
+			initialRequest:     "/api/shorten",
+			initialRequestType: "POST",
+			body:               "{\"url\":\"http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8\"}",
+			secondRequestType:  "GET",
+			want: want{
+				inBetweenStatusCode:  201,
+				inBetweenContentType: "application/json",
+				finalStatusCode:      307,
+				location:             "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := Routes()
+			ts := httptest.NewServer(r)
+			defer ts.Close()
+
+			resp, body := testRequest(t, ts, tt.initialRequestType, tt.initialRequest, tt.body)
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
+			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
+
+			type JsonURLBody struct {
+				Url string `json:"result"`
+			}
+			JsonURL := JsonURLBody{}
+			_ = json.Unmarshal([]byte(body), &JsonURL)
+			body = fmt.Sprintf("%s", JsonURL.Url)
+
+			//	в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
+			body = strings.TrimPrefix(body, "http://")
+			body = strings.TrimPrefix(body, Addr)
+
+			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
+			defer resp.Body.Close()
+			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
+			assert.Equal(t, tt.want.location, resp.Header.Get("Location"))
+		})
+	}
+}
 
 func TestShortURLHandler(t *testing.T) {
 
@@ -29,7 +93,7 @@ func TestShortURLHandler(t *testing.T) {
 		want               want
 	}{
 		{
-			name: "Going through test",
+			name: "Going through test #2 with URL in initial text/plain POST",
 			//	get the URL, create a short URL from it and send it to the client,
 			//	then get short URL from client and response to him with initial URL
 			initialRequest:     "/",
@@ -55,7 +119,7 @@ func TestShortURLHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
-			//в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
+			//	в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
 			body = strings.TrimPrefix(body, "http://")
 			body = strings.TrimPrefix(body, Addr)
 

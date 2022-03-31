@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,10 +15,83 @@ import (
 
 var Addr = "127.0.0.1:8080"
 
-/* Эндпоинт POST / принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
-Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.  */
-
 // Обработчики маршрутизатора
+
+func saveShortURLlongURL(longURL string) string {
+
+	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
+	md5URL := md5.Sum([]byte(longURL))
+	hashURL := fmt.Sprintf("%X", md5URL[0:4])
+
+	// вызов метода-вставки в структуру хранения связки HASH<==>longURL
+	models.Insert(hashURL, longURL)
+
+	// Изготавливаем  shortURL из адреса нашего сервера и HASH
+	shortURL := strings.Join([]string{"http:/", Addr, hashURL}, "/")
+	return shortURL
+}
+
+func CreateShortURL_JSONHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	jsonURL, err := io.ReadAll(r.Body) // считываем JSON из тела запроса
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	type JsonURLBody struct {
+		Url string `json:"url"`
+	}
+	JsonURL := JsonURLBody{}
+
+	err = json.Unmarshal(jsonURL, &JsonURL) //	парсим JSON и записываем результат в структуру
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(JsonURL.Url) == 0 {
+		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
+		return
+	}
+
+	longURL := fmt.Sprintf("%s", JsonURL.Url) // 	изготавливаем символьную строку с URL, считанным из JSON
+
+	if strings.ContainsAny(longURL, " !,*\n") {
+		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
+		return
+	}
+
+	shortURL := saveShortURLlongURL(longURL) //	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
+	/*
+		// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
+		md5URL := md5.Sum([]byte(longURL))
+		hashURL := fmt.Sprintf("%X", md5URL[0:4])
+
+		// вызов метода-вставки в структуру хранения связки HASH<==>URL
+		models.Insert(hashURL, longURL)
+
+		// Изготавливаем короткий URL из адреса нашего сервера и HASH
+		shortURL := strings.Join([]string{"http:/", Addr, hashURL}, "/")
+
+
+	*/
+	type ResultURL struct {
+		Result string `json:"result"`
+	}
+	resultURL := ResultURL{
+		Result: shortURL,
+	}
+	shortJsonURL, err := json.Marshal(resultURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в виде текста
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(shortJsonURL)
+}
 
 func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -28,21 +102,26 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	longURL := string(inURL)
+
 	if strings.ContainsAny(longURL, " !,*\n") {
 		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
 		return
 	}
 
-	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
-	md5URL := md5.Sum(inURL)
-	hashURL := fmt.Sprintf("%X", md5URL[0:4])
+	shortURL := saveShortURLlongURL(longURL) //	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
+	/*
+		// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
+		md5URL := md5.Sum([]byte(longURL))
+		hashURL := fmt.Sprintf("%X", md5URL[0:4])
 
-	// вызов метода-вставки в структуру хранения связки HASH<==>URL
-	models.Insert(hashURL, longURL)
+		// вызов метода-вставки в структуру хранения связки HASH<==>URL
+		models.Insert(hashURL, longURL)
 
-	// Изготавливаем короткий URL из адреса нашего сервера и HASH
-	shortURL := strings.Join([]string{"http:/", Addr, hashURL}, "/")
+		// Изготавливаем короткий URL из адреса нашего сервера и HASH
+		shortURL := strings.Join([]string{"http:/", Addr, hashURL}, "/")
 
+
+	*/
 	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в виде текста
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
