@@ -13,9 +13,12 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
+//	если переменная среды BASE_URL задана, то используем её как адрес для сокращенного URL
+// если не задана, то значение по умолчанию задается здесь - http://127.0.0.1:8080
 var Addr = "http://127.0.0.1:8080"
 
-// Обработчики маршрутизатора
+//	вспомогательная общая функция, создающая HASH из longURL,
+//	сохраняющая связку HASH<==>URL в базу данных, и возвращающая короткий URL для отправки клиенту
 
 func saveShortURLlongURL(longURL string) string {
 
@@ -31,6 +34,8 @@ func saveShortURLlongURL(longURL string) string {
 	return shortURL
 }
 
+//	Обработчики маршрутизатора
+//	Обработчик POST с URL в виде JSON
 func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	jsonURL, err := io.ReadAll(r.Body) // считываем JSON из тела запроса
@@ -39,13 +44,13 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type jsonURLBody struct {
+	type jsonURLBody struct { //	описываем структуру JSON в запросе - {"url":"url"}
 		URL string `json:"url"`
 	}
-	JSONBody := jsonURLBody{}
+	JSONBody := jsonURLBody{} //	создаеём экземпляр структуры для заполнения из JSON
 
-	err = json.Unmarshal(jsonURL, &JSONBody) //	парсим JSON и записываем результат в структуру
-	if err != nil {                          //	проверяем парсится ли JSON
+	err = json.Unmarshal(jsonURL, &JSONBody) //	парсим JSON и записываем результат в экземпляр структуры
+	if err != nil {                          //	проверяем успешно ли парсится JSON
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -58,15 +63,15 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL := saveShortURLlongURL(JSONBody.URL) //	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
+	shortURL := saveShortURLlongURL(JSONBody.URL) //	изготавливаем shortURL и сохраняем в базу связку HASH<==>URL
 
-	type ResultURL struct {
+	type ResultURL struct { //	описываем структура создаваемого JSON
 		Result string `json:"result"`
 	}
-	resultURL := ResultURL{
+	resultURL := ResultURL{ //	создаем экземпляр структуры и выставляем а него короткий URL для отправки в JSON
 		Result: shortURL,
 	}
-	shortJSONURL, err := json.Marshal(resultURL) //	изготавливаем JSON вида "result":"url"
+	shortJSONURL, err := json.Marshal(resultURL) //	изготавливаем JSON вида {"result":"url"}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -78,6 +83,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(shortJSONURL) //	пишем JSON с URL в тело ответа
 }
 
+//	Обработчик POST с URL в виде текста
 func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	inURL, err := io.ReadAll(r.Body)
@@ -101,6 +107,7 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(shortURL)) //	пишем URL в текстовом виде в тело ответа
 }
 
+//	Обработчик GET на адрес короткого URL
 func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashURL := chi.URLParam(r, "hashURL")

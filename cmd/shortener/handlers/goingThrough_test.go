@@ -57,17 +57,18 @@ func TestShortURLJSONHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
-			type BodyURL struct {
-				Result string `json:"result"`
+			type BodyURL struct { //	описываем структуру JSON содержимого нашего ответа на POST c URL в JSON-формате
+				Result string `json:"result"` //	URL лежит в JSON в формате {"result":"url"}
 			}
-			Body := BodyURL{}
+			Body := BodyURL{} //	создаем экземпляр структуры и считываем в него JSON содержимое BODY
 			_ = json.Unmarshal([]byte(body), &Body)
-			body = Body.Result
+			body = Body.Result //	переопределяем переменную body, записыывая в неё URL взятый из поля result из JSON
 
-			//	в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
-			//body = strings.TrimPrefix(body, "http://")
+			//	теперь в body лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
+			//	так что обрезаем базовый URL, прописанный в глобальной переменной handlers.Addr
 			body = strings.TrimPrefix(body, Addr)
 
+			// используем содержимое body - короткий URL с обрезанным SCHEME и HOST - BASE_URL, как адрес запроса
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
 			defer resp.Body.Close()
 			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
@@ -119,10 +120,11 @@ func TestShortURLHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
-			//	в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
-			//body = strings.TrimPrefix(body, "http://")
+			//	теперь в body лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
+			//	так что обрезаем базовый URL, прописанный в глобальной переменной handlers.Addr
 			body = strings.TrimPrefix(body, Addr)
 
+			// используем содержимое body - короткий URL с обрезанным SCHEME и HOST - BASE_URL, как адрес запроса
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
 			defer resp.Body.Close()
 			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
@@ -136,7 +138,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body st
 	require.NoError(t, err)
 
 	ErrUseLastResponse := errors.New("net/http: use last response")
-
+	//	изменяем базовые политики redirect для HTTP-client - в случае редиректа, отменяем его и выдаём последний response
 	http.DefaultClient.CheckRedirect = func(req *http.Request, previous []*http.Request) error {
 		if len(previous) != 0 { //	В случае редиректа, блокируем его и возвращаем последний response
 			return ErrUseLastResponse
