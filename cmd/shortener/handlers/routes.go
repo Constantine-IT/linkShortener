@@ -27,8 +27,8 @@ func Routes() chi.Router {
 		r.Get("/", GetShortURLHandler)
 		// POST /
 		r.Post("/", CreateShortURLHandler)
-		// POST /api/shorten
-		r.Post("/api/shorten", CreateShortURL_JSONHandler)
+		// POST /api/shorten with JSON
+		r.Post("/api/shorten", CreateShortURLJSONHandler)
 	})
 
 	return r

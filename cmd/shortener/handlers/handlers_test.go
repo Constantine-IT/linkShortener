@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestShortURL_JSONHandler(t *testing.T) {
+func TestShortURLJSONHandler(t *testing.T) {
 
 	type want struct {
 		inBetweenStatusCode  int
@@ -36,8 +35,9 @@ func TestShortURL_JSONHandler(t *testing.T) {
 			//	then get short URL from client and response to him with initial URL
 			initialRequest:     "/api/shorten",
 			initialRequestType: "POST",
-			body:               "{\"url\":\"http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8\"}",
-			secondRequestType:  "GET",
+			//body:               "{\"url\":\"http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8\"}",
+			body:              `{"url":"http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8"}`,
+			secondRequestType: "GET",
 			want: want{
 				inBetweenStatusCode:  201,
 				inBetweenContentType: "application/json",
@@ -57,12 +57,12 @@ func TestShortURL_JSONHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
-			type JsonURLBody struct {
-				Url string `json:"result"`
+			type BodyURL struct {
+				Result string `json:"result"`
 			}
-			JsonURL := JsonURLBody{}
-			_ = json.Unmarshal([]byte(body), &JsonURL)
-			body = fmt.Sprintf("%s", JsonURL.Url)
+			Body := BodyURL{}
+			_ = json.Unmarshal([]byte(body), &Body)
+			body = Body.Result
 
 			//	в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
 			body = strings.TrimPrefix(body, "http://")
