@@ -45,7 +45,7 @@ func main() {
 		log.Println("Из файла считаны сохраненные URL:")
 		for {
 			readedURL, err := fileReader.ReadURL()
-			m.UrlTable[readedURL.HashURL] = readedURL.LongURL
+			m.URLTable[readedURL.HashURL] = readedURL.LongURL
 			if err != nil {
 				log.Fatal(err)
 				return
@@ -58,7 +58,7 @@ func main() {
 
 	//	запуск сервера
 	srv := &http.Server{
-		Addr:    h.Addr,
+		Addr:    srvAddr,
 		Handler: h.Routes(),
 	}
 	log.Fatal(srv.ListenAndServe())
