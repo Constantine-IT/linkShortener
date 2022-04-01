@@ -68,7 +68,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	type ResultURL struct { //	описываем структура создаваемого JSON
 		Result string `json:"result"`
 	}
-	resultURL := ResultURL{ //	создаем экземпляр структуры и выставляем а него короткий URL для отправки в JSON
+	resultURL := ResultURL{ //	создаем экземпляр структуры и вставляем в него короткий URL для отправки в JSON
 		Result: shortURL,
 	}
 	shortJSONURL, err := json.Marshal(resultURL) //	изготавливаем JSON вида {"result":"<shorten_url>"}
@@ -87,7 +87,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	inURL, err := io.ReadAll(r.Body)
-	if err != nil || len(inURL) == 0 { //	проверяем на пустое тело запроса
+	if err != nil || len(inURL) == 0 { //	проверяем на пустое тело запроса и/или другие ошибки чтения
 		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
 		return
 	}
@@ -112,7 +112,7 @@ func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashURL := chi.URLParam(r, "hashURL")
 
-	if hashURL == "" {
+	if hashURL == "" { //	проверяем указан ли HASH в коротком URL
 		http.Error(w, "ShortURL param is missed", http.StatusBadRequest)
 		return
 	}
@@ -123,7 +123,7 @@ func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле location и делая Redirect на него
+	// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле "location" и делая Redirect на него
 	w.Header().Set("Location", longURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
 	//	w.WriteHeader(201) //  Это для тестов в POSTMAN. На бою закомментировать.

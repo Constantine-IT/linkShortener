@@ -24,9 +24,11 @@ func NewURLWriter(fileName string) (*URLWriter, error) {
 		encoder: json.NewEncoder(file),
 	}, nil
 }
+
 func (p *URLWriter) WriteURL(URL *ShortenURL) error {
 	return p.encoder.Encode(&URL)
 }
+
 func (p *URLWriter) Close() error {
 	return p.file.Close()
 }
@@ -46,6 +48,7 @@ func NewURLReader(fileName string) (*URLReader, error) {
 		decoder: json.NewDecoder(file),
 	}, nil
 }
+
 func (c *URLReader) ReadURL() (*ShortenURL, error) {
 	shortenURL := &ShortenURL{}
 	if err := c.decoder.Decode(&shortenURL); err != nil {
@@ -53,6 +56,7 @@ func (c *URLReader) ReadURL() (*ShortenURL, error) {
 	}
 	return shortenURL, nil
 }
+
 func (c *URLReader) Close() error {
 	return c.file.Close()
 }

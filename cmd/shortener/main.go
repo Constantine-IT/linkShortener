@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	//если не задан ServerAddress в server.cfg, то по умолчанию запускаем сервер на 127.0.0.1:8080
+	//	по умолчанию запускаем сервер на адресе 127.0.0.1:8080
 	srvAddr := "127.0.0.1:8080"
 	//	чтение файла конфигурации сервера
 	config, err := os.ReadFile("server.cfg")
@@ -21,24 +21,29 @@ func main() {
 		log.Println(err.Error())
 	}
 	//	парсинг считанной конфигурации
+	//	ServerAddress в server.cfg - адрес для запуска сервера
 	_, err = fmt.Sscanf(string(config), "ServerAddress %s", &srvAddr)
 	if err != nil {
 		log.Println(err.Error())
 	}
-	//	считываем переменные окружения: адрес запуска HTTP-сервера - SERVER_ADDRESS
-	//	и базовый адрес результирующего сокращённого URL - BASE_URL
+
+	//	считываем переменные окружения:
+	//	адрес запуска HTTP-сервера - SERVER_ADDRESS (default: 127.0.0.1:8080)
 	if u, flag := os.LookupEnv("SERVER_ADDRESS"); flag {
-		srvAddr = u //	если SERVER_ADDRESS задан, то стартуем наш HTTP-сервер на этом адресе
+		srvAddr = u
 	}
 
+	//	адрес для формирования <shorten_URL> - BASE_URL (default: http://127.0.0.1:8080)
 	if u, flag := os.LookupEnv("BASE_URL"); flag {
-		h.Addr = u //	если переменная среды BASE_URL задана, то используем её как адрес для сокращенного URL
+		h.Addr = u
 	}
 
+	//	Путь к файлу для сохранения URL - FILE_STORAGE_PATH (при перезапуске сервера данные сохраняются)
+	//	если FILE_STORAGE_PATH не задана, то храним URL только в оперативной памяти и теряем при перезапуске.
 	if u, flag := os.LookupEnv("FILE_STORAGE_PATH"); flag {
-		m.FilePath = u //	если переменная среды FILE_STORAGE_PATH задана, то используем её как адрес для хранения файла с URL
+		m.FilePath = u
 	}
-	//m.FilePath = "url_DB.txt"
+	//	m.FilePath = "url_DB.txt"	//	Это для тестов с файлом для хранения URL. На бою закомментировать.
 	if m.FilePath != "" {
 		fileReader, err := m.NewURLReader(m.FilePath)
 		if err != nil {

@@ -13,8 +13,8 @@ import (
 )
 
 //	These are integration test with following flow:
-//	receive URL_for_short in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside body,
-//	receive <shorten_URL> from client with GET method and response to it with initial URL in location field in the header
+//	receive URL_for_shorting in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside BODY,
+//	receive <shorten_URL> from client with GET method and response to it with initial URL in the field "location" in header
 
 func TestShortURLJSONHandler(t *testing.T) {
 
@@ -62,7 +62,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 			}
 			Body := BodyURL{} //	создаем экземпляр структуры и считываем в него JSON содержимое BODY
 			_ = json.Unmarshal([]byte(body), &Body)
-			body = Body.Result //	переопределяем переменную body, записыывая в неё URL взятый из поля result из JSON
+			body = Body.Result //	переопределяем переменную body, записыывая в неё URL, взятый из поля "result"
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
