@@ -47,11 +47,11 @@ func NewURLReader(fileName string) (*URLReader, error) {
 	}, nil
 }
 func (c *URLReader) ReadURL() (*ShortenURL, error) {
-	event := &ShortenURL{}
-	if err := c.decoder.Decode(&event); err != nil {
+	shortenURL := &ShortenURL{}
+	if err := c.decoder.Decode(&shortenURL); err != nil {
 		return nil, err
 	}
-	return event, nil
+	return shortenURL, nil
 }
 func (c *URLReader) Close() error {
 	return c.file.Close()

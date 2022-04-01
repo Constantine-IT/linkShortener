@@ -37,6 +37,9 @@ func main() {
 
 	if u, flag := os.LookupEnv("FILE_STORAGE_PATH"); flag {
 		m.FilePath = u //	если переменная среды FILE_STORAGE_PATH задана, то используем её как адрес для хранения файла с URL
+	}
+	//m.FilePath = "url_DB.txt"
+	if m.FilePath != "" {
 		fileReader, err := m.NewURLReader(m.FilePath)
 		if err != nil {
 			log.Fatal(err)
@@ -45,12 +48,14 @@ func main() {
 		log.Println("Из файла считаны сохраненные URL:")
 		for {
 			readedURL, err := fileReader.ReadURL()
-			m.URLTable[readedURL.HashURL] = readedURL.LongURL
+			if readedURL == nil {
+				break
+			}
 			if err != nil {
 				log.Fatal(err)
-				return
 			}
 			log.Println(readedURL)
+			m.URLTable[readedURL.HashURL] = readedURL.LongURL
 		}
 	}
 
