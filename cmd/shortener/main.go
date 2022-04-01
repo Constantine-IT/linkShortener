@@ -7,6 +7,7 @@ import (
 	"os"
 
 	h "github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
+	m "github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
 func main() {
@@ -23,8 +24,42 @@ func main() {
 	_, err = fmt.Sscanf(string(config), "ServerAddress %s", &h.Addr)
 	if err != nil {
 		log.Println(err.Error())
+<<<<<<< Updated upstream
 	} 
 	log.Printf("Сервер будет запущен по адресу: %s", h.Addr)
+=======
+	}
+	//	считываем переменные окружения: адрес запуска HTTP-сервера - SERVER_ADDRESS
+	//	и базовый адрес результирующего сокращённого URL - BASE_URL
+	if u, flag := os.LookupEnv("SERVER_ADDRESS"); flag {
+		srvAddr = u //	если SERVER_ADDRESS задан, то стартуем наш HTTP-сервер на этом адресе
+	}
+
+	if u, flag := os.LookupEnv("BASE_URL"); flag {
+		h.Addr = u //	если переменная среды BASE_URL задана, то используем её как адрес для сокращенного URL
+	}
+
+	if u, flag := os.LookupEnv("FILE_STORAGE_PATH"); flag {
+		m.FilePath = u //	если переменная среды FILE_STORAGE_PATH задана, то используем её как адрес для хранения файла с URL
+		fileReader, err := m.NewURLReader(m.FilePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer fileReader.Close()
+		log.Println("Из файла считаны сохраненные URL:")
+		for {
+			readedURL, err := fileReader.ReadURL()
+			m.UrlTable[readedURL.HashURL] = readedURL.LongURL
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			log.Println(readedURL)
+		}
+	}
+
+	log.Printf("Сервер будет запущен по адресу: %s", srvAddr)
+>>>>>>> Stashed changes
 
 	//	запуск сервера
 	srv := &http.Server{
