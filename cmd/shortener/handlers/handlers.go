@@ -13,8 +13,8 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
-//	если переменная среды BASE_URL задана, то используем её как адрес для сокращенного URL
-// если не задана, то значение по умолчанию задается здесь - http://127.0.0.1:8080
+//	если задана переменная среды BASE_URL, то используем её как адрес для сокращенного URL
+//	если не задана, то значение по умолчанию задается здесь в http://127.0.0.1:8080
 var Addr = "http://127.0.0.1:8080"
 
 //	вспомогательная общая функция, создающая HASH из longURL,
@@ -44,7 +44,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type jsonURLBody struct { //	описываем структуру JSON в запросе - {"url":"url"}
+	type jsonURLBody struct { //	описываем структуру JSON в запросе - {"url":"<some_url>"}
 		URL string `json:"url"`
 	}
 	JSONBody := jsonURLBody{} //	создаеём экземпляр структуры для заполнения из JSON
@@ -71,7 +71,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	resultURL := ResultURL{ //	создаем экземпляр структуры и выставляем а него короткий URL для отправки в JSON
 		Result: shortURL,
 	}
-	shortJSONURL, err := json.Marshal(resultURL) //	изготавливаем JSON вида {"result":"url"}
+	shortJSONURL, err := json.Marshal(resultURL) //	изготавливаем JSON вида {"result":"<shorten_url>"}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

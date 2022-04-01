@@ -12,6 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//	These are integration test with following flow:
+//	receive URL_for_short in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside body,
+//	receive <shorten_URL> from client with GET method and response to it with initial URL in location field in the header
+
 func TestShortURLJSONHandler(t *testing.T) {
 
 	type want struct {
@@ -29,18 +33,15 @@ func TestShortURLJSONHandler(t *testing.T) {
 		want               want
 	}{
 		{
-			name: "Going through test #1 with URL in initial JSON POST",
-			//	get the URL, create a short URL from it and send it to the client,
-			//	then get short URL from client and response to him with initial URL
+			name:               "Going through test #1: with initial JSON body POST",
 			initialRequest:     "/api/shorten",
 			initialRequestType: "POST",
-			//body:               "{\"url\":\"http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8\"}",
-			body:              `{"url":"http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8"}`,
-			secondRequestType: "GET",
+			body:               `{"url":"http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8"}`,
+			secondRequestType:  http.MethodGet,
 			want: want{
-				inBetweenStatusCode:  201,
+				inBetweenStatusCode:  http.StatusCreated,
 				inBetweenContentType: "application/json",
-				finalStatusCode:      307,
+				finalStatusCode:      http.StatusTemporaryRedirect,
 				location:             "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
 			},
 		},
@@ -57,17 +58,17 @@ func TestShortURLJSONHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
 			type BodyURL struct { //	описываем структуру JSON содержимого нашего ответа на POST c URL в JSON-формате
-				Result string `json:"result"` //	URL лежит в JSON в формате {"result":"url"}
+				Result string `json:"result"` //	URL лежит в JSON в формате {"result":"<shorten_url>"}
 			}
 			Body := BodyURL{} //	создаем экземпляр структуры и считываем в него JSON содержимое BODY
 			_ = json.Unmarshal([]byte(body), &Body)
 			body = Body.Result //	переопределяем переменную body, записыывая в неё URL взятый из поля result из JSON
 
-			//	теперь в body лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
-			//	так что обрезаем базовый URL, прописанный в глобальной переменной handlers.Addr
+			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
+			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
 			body = strings.TrimPrefix(body, Addr)
 
-			// используем содержимое body - короткий URL с обрезанным SCHEME и HOST - BASE_URL, как адрес запроса
+			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
 			defer resp.Body.Close()
 			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
@@ -93,17 +94,15 @@ func TestShortURLHandler(t *testing.T) {
 		want               want
 	}{
 		{
-			name: "Going through test #2 with URL in initial text/plain POST",
-			//	get the URL, create a short URL from it and send it to the client,
-			//	then get short URL from client and response to him with initial URL
+			name:               "Going through test #2: with initial text/plain body POST",
 			initialRequest:     "/",
 			initialRequestType: "POST",
 			body:               "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
-			secondRequestType:  "GET",
+			secondRequestType:  http.MethodGet,
 			want: want{
-				inBetweenStatusCode:  201,
+				inBetweenStatusCode:  http.StatusCreated,
 				inBetweenContentType: "text/plain",
-				finalStatusCode:      307,
+				finalStatusCode:      http.StatusTemporaryRedirect,
 				location:             "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
 			},
 		},
@@ -119,11 +118,11 @@ func TestShortURLHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
-			//	теперь в body лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
-			//	так что обрезаем базовый URL, прописанный в глобальной переменной handlers.Addr
+			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
+			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
 			body = strings.TrimPrefix(body, Addr)
 
-			// используем содержимое body - короткий URL с обрезанным SCHEME и HOST - BASE_URL, как адрес запроса
+			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
 			defer resp.Body.Close()
 			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
@@ -138,15 +137,15 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body st
 
 	//	изменяем базовые политики redirect для HTTP-client - в случае редиректа, отменяем его и выдаём последний response
 	http.DefaultClient.CheckRedirect = func(req *http.Request, previous []*http.Request) error {
-		if len(previous) != 0 { //	В случае редиректа, блокируем его и возвращаем последний response
-			return http.ErrUseLastResponse
+		if len(previous) != 0 { // если были предыдущие запросы
+			return http.ErrUseLastResponse //	возвращаем response, полученный на них
 		}
 		return nil
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
-	
+
 	respBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 

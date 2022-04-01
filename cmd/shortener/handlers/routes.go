@@ -16,19 +16,14 @@ func Routes() chi.Router {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	/* Эндпоинт POST / принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
-	Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
-	Эндпоинт POST /api/shorten, принимающий в теле запроса JSON-объект {"url":"<some_url>"} и возвращающий в ответ объект {"result":"<shorten_url>"}.	*/
-
-	// группируем все запросы в одном месте
+	//	Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
+	//	Эндпоинт POST /api/shorten, принимающий в теле запроса JSON-объект {"url":"<some_url>"} и возвращающий в ответ объект {"result":"<shorten_url>"}.
+	//	Эндпоинт POST / принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 	r.Route("/", func(r chi.Router) {
-		// GET /HASH
 		r.Get("/{hashURL}", GetShortURLHandler)
 		r.Get("/", GetShortURLHandler)
-		// POST /
-		r.Post("/", CreateShortURLHandler)
-		// POST /api/shorten with JSON
 		r.Post("/api/shorten", CreateShortURLJSONHandler)
+		r.Post("/", CreateShortURLHandler)
 	})
 
 	return r

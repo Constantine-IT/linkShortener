@@ -26,9 +26,9 @@ func TestResponseWithErrors(t *testing.T) {
 		want        want
 	}{
 		{
-			name:        "test #1: Request with empty body (without URL to short)",
+			name:        "Test #1: Request with empty body (without URL to short)",
 			request:     "/",
-			requestType: "POST",
+			requestType: http.MethodPost,
 			body:        "",
 			want: want{
 				statusCode:  http.StatusBadRequest,
@@ -37,9 +37,9 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "test #2: Request with forbidden symbols in URL",
+			name:        "Test #2: Request with forbidden symbols in URL",
 			request:     "/",
-			requestType: "POST",
+			requestType: http.MethodPost,
 			body:        "http://test.com/ahshshd*!",
 			want: want{
 				statusCode:  http.StatusBadRequest,
@@ -48,9 +48,9 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "test #3: Request with method that not allowed",
+			name:        "Test #3: Request with method that not allowed",
 			request:     "/",
-			requestType: "PATCH",
+			requestType: http.MethodPatch,
 			body:        "http://test.com/ahshshd",
 			want: want{
 				statusCode:  http.StatusMethodNotAllowed,
@@ -59,9 +59,9 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "test #4: Request URL that doesn't exist in database",
+			name:        "Test #4: Request URL that doesn't exist in database",
 			request:     "/111",
-			requestType: "GET",
+			requestType: http.MethodGet,
 			body:        "",
 			want: want{
 				statusCode:  http.StatusNotFound,
@@ -70,9 +70,9 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "test #5: Request URL with too long PATH",
+			name:        "Test #5: Request URL with too long PATH",
 			request:     "/111/1223",
-			requestType: "GET",
+			requestType: http.MethodGet,
 			body:        "",
 			want: want{
 				statusCode:  http.StatusNotFound,
@@ -81,9 +81,9 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "test #6: Request URL without HASH",
+			name:        "Test #6: Request URL without HASH",
 			request:     "/",
-			requestType: "GET",
+			requestType: http.MethodGet,
 			body:        "",
 			want: want{
 				statusCode:  http.StatusBadRequest,
@@ -92,9 +92,9 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "test #7: Request with URL in JSON body",
+			name:        "Test #7: Request with URL in JSON body",
 			request:     "/api/shorten",
-			requestType: "POST",
+			requestType: http.MethodPost,
 			body:        `{"url":""}`,
 			want: want{
 				statusCode:  http.StatusBadRequest,
