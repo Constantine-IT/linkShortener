@@ -12,8 +12,8 @@ import (
 
 func main() {
 	//если не задан ServerAddress в server.cfg, то по умолчанию запускаем сервер на 127.0.0.1:8080
-	h.Addr = "127.0.0.1:8080"
-	//	чтение файла конфигурации сервера	
+	srvAddr := "127.0.0.1:8080"
+	//	чтение файла конфигурации сервера
 	config, err := os.ReadFile("server.cfg")
 	if err == nil {
 		log.Printf("Читаем файл server.cfg \n %s", config)
@@ -21,13 +21,9 @@ func main() {
 		log.Println(err.Error())
 	}
 	//	парсинг считанной конфигурации
-	_, err = fmt.Sscanf(string(config), "ServerAddress %s", &h.Addr)
+	_, err = fmt.Sscanf(string(config), "ServerAddress %s", &srvAddr)
 	if err != nil {
 		log.Println(err.Error())
-<<<<<<< Updated upstream
-	} 
-	log.Printf("Сервер будет запущен по адресу: %s", h.Addr)
-=======
 	}
 	//	считываем переменные окружения: адрес запуска HTTP-сервера - SERVER_ADDRESS
 	//	и базовый адрес результирующего сокращённого URL - BASE_URL
@@ -59,7 +55,6 @@ func main() {
 	}
 
 	log.Printf("Сервер будет запущен по адресу: %s", srvAddr)
->>>>>>> Stashed changes
 
 	//	запуск сервера
 	srv := &http.Server{

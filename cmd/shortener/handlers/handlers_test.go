@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,35 +11,95 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestShortURLHandler(t *testing.T) {
+func TestResponseWithErrors(t *testing.T) {
 
 	type want struct {
-		inBetweenStatusCode  int
-		inBetweenContentType string
-		finalStatusCode      int
-		location             string
+		statusCode  int
+		contentType string
+		body        string
 	}
 	tests := []struct {
-		name               string
-		initialRequest     string
-		initialRequestType string
-		body               string
-		secondRequestType  string
-		want               want
+		name        string
+		request     string
+		requestType string
+		body        string
+		want        want
 	}{
 		{
-			name: "Going through test",
-			//	get the URL, create a short URL from it and send it to the client,
-			//	then get short URL from client and response to him with initial URL
-			initialRequest:     "/",
-			initialRequestType: "POST",
-			body:               "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
-			secondRequestType:  "GET",
+			name:        "Test #1: Request with empty body (without URL to short)",
+			request:     "/",
+			requestType: http.MethodPost,
+			body:        "",
 			want: want{
-				inBetweenStatusCode:  201,
-				inBetweenContentType: "text/plain",
-				finalStatusCode:      307,
-				location:             "http://tudzqakmoorcb.net/bflsgr36aqo4x6/mmktfboj8",
+				statusCode:  http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+				body:        "There is no URL in your request BODY!\n",
+			},
+		},
+		{
+			name:        "Test #2: Request with forbidden symbols in URL",
+			request:     "/",
+			requestType: http.MethodPost,
+			body:        "http://test.com/ahshshd*!",
+			want: want{
+				statusCode:  http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+				body:        "There are forbidden symbols in the URL!\n",
+			},
+		},
+		{
+			name:        "Test #3: Request with method that not allowed",
+			request:     "/",
+			requestType: http.MethodPatch,
+			body:        "http://test.com/ahshshd",
+			want: want{
+				statusCode:  http.StatusMethodNotAllowed,
+				contentType: "",
+				body:        "",
+			},
+		},
+		{
+			name:        "Test #4: Request URL that doesn't exist in database",
+			request:     "/111",
+			requestType: http.MethodGet,
+			body:        "",
+			want: want{
+				statusCode:  http.StatusNotFound,
+				contentType: "text/plain; charset=utf-8",
+				body:        "There is no such URL in our base!\n",
+			},
+		},
+		{
+			name:        "Test #5: Request URL with too long PATH",
+			request:     "/111/1223",
+			requestType: http.MethodGet,
+			body:        "",
+			want: want{
+				statusCode:  http.StatusNotFound,
+				contentType: "text/plain; charset=utf-8",
+				body:        "404 page not found\n",
+			},
+		},
+		{
+			name:        "Test #6: Request URL without HASH",
+			request:     "/",
+			requestType: http.MethodGet,
+			body:        "",
+			want: want{
+				statusCode:  http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+				body:        "ShortURL param is missed\n",
+			},
+		},
+		{
+			name:        "Test #7: Request with URL in JSON body",
+			request:     "/api/shorten",
+			requestType: http.MethodPost,
+			body:        `{"url":""}`,
+			want: want{
+				statusCode:  http.StatusBadRequest,
+				contentType: "text/plain; charset=utf-8",
+				body:        "There is no URL in your request BODY!\n",
 			},
 		},
 	}
@@ -50,37 +109,22 @@ func TestShortURLHandler(t *testing.T) {
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 
-			resp, body := testRequest(t, ts, tt.initialRequestType, tt.initialRequest, tt.body)
+			resp, body := testSimpleRequest(t, ts, tt.requestType, tt.request, tt.body)
 			defer resp.Body.Close()
-			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
-			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
-
-			//в BODY лежит короткий URL, но тестовый сервер принимает только PATH без SCHEME и IP-адреса
-			body = strings.TrimPrefix(body, "http://")
-			body = strings.TrimPrefix(body, Addr)
-
-			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
-			defer resp.Body.Close()
-			assert.Equal(t, tt.want.finalStatusCode, resp.StatusCode)
-			assert.Equal(t, tt.want.location, resp.Header.Get("Location"))
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
+			assert.Equal(t, tt.want.body, body)
 		})
 	}
 }
 
-func testRequest(t *testing.T, ts *httptest.Server, method, path string, body string) (*http.Response, string) {
+func testSimpleRequest(t *testing.T, ts *httptest.Server, method, path string, body string) (*http.Response, string) {
 	req, err := http.NewRequest(method, ts.URL+path, strings.NewReader(body))
 	require.NoError(t, err)
 
-	ErrUseLastResponse := errors.New("net/http: use last response")
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
 
-	http.DefaultClient.CheckRedirect = func(req *http.Request, previous []*http.Request) error {
-		if len(previous) != 0 { //	В случае редиректа, блокируем его и возвращаем последний response
-			return ErrUseLastResponse
-		}
-		return nil
-	}
-
-	resp, _ := http.DefaultClient.Do(req)
 	respBody, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 
