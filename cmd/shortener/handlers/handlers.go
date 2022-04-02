@@ -13,13 +13,11 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
-//	если задана переменная среды BASE_URL, то используем её как адрес для сокращенного URL
-//	если не задана, то значение по умолчанию задается здесь в http://127.0.0.1:8080
+//	Базовый адрес для <shorten_URL>. Может быть переопределен в main.go
 var Addr = "http://127.0.0.1:8080"
 
-//	вспомогательная общая функция, создающая HASH из longURL,
-//	сохраняющая связку HASH<==>URL в базу данных, и возвращающая короткий URL для отправки клиенту
-
+//	вспомогательная функция, создающая HASH из longURL, и сохраняющая связку HASH<==>URL в БД
+//	возвращающает короткий URL для отправки клиенту
 func saveShortURLlongURL(longURL string) string {
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
@@ -35,6 +33,7 @@ func saveShortURLlongURL(longURL string) string {
 }
 
 //	Обработчики маршрутизатора
+
 //	Обработчик POST с URL в виде JSON
 func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -44,34 +43,44 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type jsonURLBody struct { //	описываем структуру JSON в запросе - {"url":"<some_url>"}
+	//	описываем структуру JSON в запросе - {"url":"<some_url>"}
+	type jsonURLBody struct {
 		URL string `json:"url"`
 	}
-	JSONBody := jsonURLBody{} //	создаеём экземпляр структуры для заполнения из JSON
+	//	создаеём экземпляр структуры для заполнения из JSON
+	JSONBody := jsonURLBody{}
 
-	err = json.Unmarshal(jsonURL, &JSONBody) //	парсим JSON и записываем результат в экземпляр структуры
-	if err != nil {                          //	проверяем успешно ли парсится JSON
+	//	парсим JSON и записываем результат в экземпляр структуры
+	err = json.Unmarshal(jsonURL, &JSONBody)
+	//	проверяем успешно ли парсится JSON
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if len(JSONBody.URL) == 0 { //	Проверяем на пустую строку вместо URL
+	//	Проверяем на пустую строку вместо URL
+	if len(JSONBody.URL) == 0 {
 		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
 		return
 	}
-	if strings.ContainsAny(JSONBody.URL, " !,*\n") { //	проверяем URL на недопустимые символы
+	//	проверяем URL на недопустимые символы
+	if strings.ContainsAny(JSONBody.URL, " !,*\n") {
 		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
 		return
 	}
 
-	shortURL := saveShortURLlongURL(JSONBody.URL) //	изготавливаем shortURL и сохраняем в базу связку HASH<==>URL
+	//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL
+	shortURL := saveShortURLlongURL(JSONBody.URL)
 
-	type ResultURL struct { //	описываем структура создаваемого JSON
+	//	описываем структура создаваемого JSON вида {"result":"<shorten_url>"}
+	type ResultURL struct {
 		Result string `json:"result"`
 	}
-	resultURL := ResultURL{ //	создаем экземпляр структуры и вставляем в него короткий URL для отправки в JSON
+	//	создаем экземпляр структуры и вставляем в него короткий URL для отправки в JSON
+	resultURL := ResultURL{
 		Result: shortURL,
 	}
-	shortJSONURL, err := json.Marshal(resultURL) //	изготавливаем JSON вида {"result":"<shorten_url>"}
+	//	изготавливаем JSON
+	shortJSONURL, err := json.Marshal(resultURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -87,19 +96,21 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	inURL, err := io.ReadAll(r.Body)
-	if err != nil || len(inURL) == 0 { //	проверяем на пустое тело запроса и/или другие ошибки чтения
+	//	проверяем на пустое тело запроса и/или другие ошибки чтения
+	if err != nil || len(inURL) == 0 {
 		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
 		return
 	}
 
 	longURL := string(inURL)
-
-	if strings.ContainsAny(longURL, " !,*\n") { //	проверяем URL на недопустимые символы
+	//	проверяем URL на недопустимые символы
+	if strings.ContainsAny(longURL, " !,*\n") {
 		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
 		return
 	}
 
-	shortURL := saveShortURLlongURL(longURL) //	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
+	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
+	shortURL := saveShortURLlongURL(longURL)
 
 	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в виде текста
 	w.Header().Set("Content-Type", "text/plain")
@@ -112,12 +123,14 @@ func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashURL := chi.URLParam(r, "hashURL")
 
-	if hashURL == "" { //	проверяем указан ли HASH в коротком URL
+	//	проверяем указан ли HASH в коротком URL
+	if hashURL == "" {
 		http.Error(w, "ShortURL param is missed", http.StatusBadRequest)
 		return
 	}
 
-	longURL, flag := models.Get(hashURL) // Находим в базе URL соответствующий запрошенному HASH
+	// Находим в базе URL соответствующий запрошенному HASH
+	longURL, flag := models.Get(hashURL)
 	if !flag {
 		http.Error(w, "There is no such URL in our base!", http.StatusNotFound)
 		return
@@ -126,5 +139,4 @@ func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле "location" и делая Redirect на него
 	w.Header().Set("Location", longURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
-	//	w.WriteHeader(201) //  Это для тестов в POSTMAN. На бою закомментировать.
 }

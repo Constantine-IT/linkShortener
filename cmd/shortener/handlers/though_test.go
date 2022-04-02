@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//	These are integration test with following flow:
+//	These are integration tests with following flow:
 //	receive URL_for_shorting in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside BODY,
 //	receive <shorten_URL> from client with GET method and response to it with initial URL in the field "location" in header
 
@@ -57,12 +57,16 @@ func TestShortURLJSONHandler(t *testing.T) {
 			assert.Equal(t, tt.want.inBetweenStatusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.inBetweenContentType, resp.Header.Get("Content-Type"))
 
-			type BodyURL struct { //	описываем структуру JSON содержимого нашего ответа на POST c URL в JSON-формате
-				Result string `json:"result"` //	URL лежит в JSON в формате {"result":"<shorten_url>"}
+			//	описываем структуру JSON содержимого нашего ответа на POST c URL в JSON-формате
+			//	URL лежит в JSON в формате в виде {"result":"<shorten_url>"}
+			type BodyURL struct {
+				Result string `json:"result"`
 			}
-			Body := BodyURL{} //	создаем экземпляр структуры и считываем в него JSON содержимое BODY
+			//	создаем экземпляр структуры и считываем в него JSON содержимое BODY
+			Body := BodyURL{}
 			_ = json.Unmarshal([]byte(body), &Body)
-			body = Body.Result //	переопределяем переменную body, записыывая в неё URL, взятый из поля "result"
+			//	переопределяем переменную body, записыывая в неё URL, взятый из поля "result"
+			body = Body.Result
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
