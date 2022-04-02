@@ -4,13 +4,16 @@ import (
 	"log"
 )
 
-// пока сохраняем URL в MAP, висящей в RAM, потом перепишем всё на работу с БД
-var URLTable = make(map[string]string) // таблица для хранения URL
-//	добавили возможность хранения URL в файле, если файл не задан, то все URL храним в RAM
+// таблица для хранения URL
+var URLTable = make(map[string]string)
+
+//	если FilePath задан - при перезапуске сервера БД <shorten_URL> сохраняется в этом файле
+//	если FilePath не задан, то храним URL только в оперативной памяти и теряем при перезапуске.
 var FilePath = ""
 
-// Методы работы с моделью данных
+// Методы работы с сохраненными URL
 
+//	InitialFulfilmentURLDB - Метод первичного заполнения БД из файла сохраненных URL при старте сервера
 func InitialFulfilmentURLDB() {
 	fileReader, err := NewURLReader(FilePath)
 	if err != nil {

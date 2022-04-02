@@ -23,21 +23,6 @@ func main() {
 	fileStoragePath := flag.String("f", "", "FILE_STORAGE_PATH - путь до файла с сокращёнными URL")
 	flag.Parse()
 
-	/*	На будущее - есть возможность использовать файл конфигурации.
-		//	чтение файла конфигурации сервера
-			config, err := os.ReadFile("server.cfg")
-			if err == nil {
-				log.Printf("Читаем файл server.cfg \n %s", config)
-			} else {
-				log.Println(err.Error())
-			}
-			//	парсинг считанной конфигурации
-			//	ServerAddress в server.cfg - адрес для запуска сервера
-			_, err = fmt.Sscanf(string(config), "ServerAddress %s", &srvAddr)
-			if err != nil {
-				log.Println(err.Error())
-			}
-	*/
 	srvAddr := *serverAddress
 	h.Addr = *baseURL
 	m.FilePath = *fileStoragePath
@@ -46,25 +31,20 @@ func main() {
 	if u, flag := os.LookupEnv("SERVER_ADDRESS"); flag {
 		srvAddr = u
 	}
-
 	if u, flag := os.LookupEnv("BASE_URL"); flag {
 		h.Addr = u
 	}
-
-	//	Путь к файлу для сохранения URL - FILE_STORAGE_PATH (при перезапуске сервера данные сохраняются)
-	//	если FILE_STORAGE_PATH не задана, то храним URL только в оперативной памяти и теряем при перезапуске.
 	if u, flag := os.LookupEnv("FILE_STORAGE_PATH"); flag {
 		m.FilePath = u
 	}
-	//	m.FilePath = "url_DB.txt"	//	Это для тестов с файлом для хранения URL. На бою закомментировать.
-	//	считываем файл сохраненных URL и заполняем этой информацией БД <shorten_URL>
+
+	//	Первичное заполнение БД <shorten_URL> из файла-хранилища, если задан FILE_STORAGE_PATH
 	if m.FilePath != "" {
 		m.InitialFulfilmentURLDB()
 	}
 
-	log.Printf("Сервер будет запущен по адресу: %s", srvAddr)
-
 	//	запуск сервера
+	log.Printf("Сервер будет запущен по адресу: %s", srvAddr)
 	srv := &http.Server{
 		Addr:    srvAddr,
 		Handler: h.Routes(),
