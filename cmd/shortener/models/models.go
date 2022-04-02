@@ -11,6 +11,26 @@ var FilePath = ""
 
 // Методы работы с моделью данных
 
+func InitialFulfilmentURLDB() {
+	fileReader, err := NewURLReader(FilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fileReader.Close()
+	log.Println("Из файла считаны сохраненные URL:")
+	for {
+		readedURL, err := fileReader.ReadURL()
+		if readedURL == nil {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println(readedURL)
+		URLTable[readedURL.HashURL] = readedURL.LongURL
+	}
+}
+
 // Insert - Метод для сохранения в БД связки короткого и длинного URL.
 func Insert(shortURL, longURL string) {
 	_, ok := URLTable[shortURL]
