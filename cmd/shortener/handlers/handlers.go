@@ -62,11 +62,13 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
 		return
 	}
-	//	проверяем URL на недопустимые символы
-	if strings.ContainsAny(JSONBody.URL, " !,*\n") {
-		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
-		return
-	}
+	/*
+		//	проверяем URL на недопустимые символы
+		if strings.ContainsAny(JSONBody.URL, " !,*\n") {
+			http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
+			return
+		}
+	*/
 
 	//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL
 	shortURL := saveShortURLlongURL(JSONBody.URL)
@@ -103,12 +105,13 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	longURL := string(inURL)
-	//	проверяем URL на недопустимые символы
-	if strings.ContainsAny(longURL, " !,*\n") {
-		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
-		return
-	}
-
+	/*
+		//	проверяем URL на недопустимые символы
+		if strings.ContainsAny(longURL, " !,*\n") {
+			http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
+			return
+		}
+	*/
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
 	shortURL := saveShortURLlongURL(longURL)
 
