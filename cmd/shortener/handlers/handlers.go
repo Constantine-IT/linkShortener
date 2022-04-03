@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"compress/gzip"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
@@ -37,7 +38,22 @@ func saveShortURLlongURL(longURL string) string {
 //	Обработчик POST с URL в виде JSON
 func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	jsonURL, err := io.ReadAll(r.Body) // считываем JSON из тела запроса
+
+	var reader io.Reader
+
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		reader = gz
+		defer gz.Close()
+	} else {
+		reader = r.Body
+	}
+
+	jsonURL, err := io.ReadAll(reader) // считываем JSON из тела запроса
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -97,7 +113,22 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 //	Обработчик POST с URL в виде текста
 func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	inURL, err := io.ReadAll(r.Body)
+
+	var reader io.Reader
+
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		reader = gz
+		defer gz.Close()
+	} else {
+		reader = r.Body
+	}
+
+	inURL, err := io.ReadAll(reader)
 	//	проверяем на пустое тело запроса и/или другие ошибки чтения
 	if err != nil || len(inURL) == 0 {
 		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
