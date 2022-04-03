@@ -11,8 +11,8 @@ func Routes() chi.Router {
 	r := chi.NewRouter()
 
 	// зададим встроенные middleware, чтобы улучшить стабильность приложения
-	r.Use(middleware.Compress(1, "text/plain", "application/json"))
-	r.Use(middleware.AllowContentEncoding("gzip"))
+	r.Use(middleware.Compress(1, `text/plain`, `application/json`))
+	r.Use(middleware.AllowContentEncoding(`gzip`))
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
