@@ -38,7 +38,7 @@ func main() {
 	if u, flag := os.LookupEnv("FILE_STORAGE_PATH"); flag {
 		m.FilePath = u
 	}
-
+	//m.FilePath = "test.log"
 	//	Первичное заполнение БД <shorten_URL> из файла-хранилища, если задан FILE_STORAGE_PATH
 	if m.FilePath != "" {
 		m.InitialFulfilmentURLDB()
