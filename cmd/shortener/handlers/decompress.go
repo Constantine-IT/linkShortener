@@ -20,8 +20,9 @@ func Handler(next http.Handler) http.Handler {
 			}
 			r.Body = gz
 			defer gz.Close()
-			next.ServeHTTP(w, r)
-			return
 		}
+		next.ServeHTTP(w, r)
+		return
+
 	})
 }
