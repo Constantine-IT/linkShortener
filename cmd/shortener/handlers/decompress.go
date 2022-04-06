@@ -22,7 +22,5 @@ func Handler(next http.Handler) http.Handler {
 			defer gz.Close()
 		}
 		next.ServeHTTP(w, r)
-		return
-
 	})
 }
