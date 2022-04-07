@@ -1,41 +1,43 @@
 package models
 
 import (
+	"errors"
+	"io"
 	"log"
 )
 
 // таблица для хранения URL
 var URLTable = make(map[string]string)
 
-//	если FilePath задан - при перезапуске сервера БД <shorten_URL> сохраняется в этом файле
-//	если FilePath не задан, то храним БД URL только в оперативной памяти и теряем при перезапуске.
+//	если FilePath задан - при перезапуске сервера, список <shorten_URL> сохраняется в этом файле
+//	если FilePath не задан, то храним URL только в оперативной памяти и теряем при перезапуске.
 var FilePath = ""
 
 // Методы работы с хранилищем URL
 
 //	Метод первичного заполнения БД из файла сохраненных URL при старте сервера
 func InitialFulfilmentURLDB() {
-	//	создаем экземпляр READER из файла-хранилища HASH<==>URL
-	fileReader, err := NewURLReader(FilePath)
+	//	создаем экземпляр reader для файла-хранилища HASH<==>URL
+	fileReader, err := newReader(FilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer fileReader.Close()
-	log.Println("Из файла считаны сохраненные URL:")
+	defer fileReader.close()
+	log.Println("Обнаружен файл сохраненных URL. Начинаем считывание:")
 	for {
 		//	считываем записи по одной из файла-хранилища HASH<==>URL
-		readedURL, err := fileReader.ReadURL()
+		readedURL, err := fileReader.read()
 		//	когда дойдем до конца файла - выхоодим из цикла чтения
-		if readedURL == nil {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
 			log.Fatal(err)
 		}
-		//	записываем список считанных URL в журнал
+		//	записываем список считанных URL в log
 		log.Println(readedURL)
 		//	добавляем связку HASH<==>URL в таблицу в RAM
-		URLTable[readedURL.HashURL] = readedURL.LongURL
+		URLTable[readedURL.hashURL] = readedURL.longURL
 	}
 }
 
@@ -43,24 +45,23 @@ func InitialFulfilmentURLDB() {
 func Insert(shortURL, longURL string) {
 	//	Проверяем наличие <shorten_URL> в списке сохраненных URL
 	//	если такой URL уже есть в базе, то повторную вставку не производим
-	_, ok := URLTable[shortURL]
-	if !ok {
+	if _, ok := URLTable[shortURL]; !ok {
 		URLTable[shortURL] = longURL
-		//	если файл для хранения URL не задан, то храним список только в RAM
+		//	если файл для хранения URL не задан, то храним список только в RAM в URLTable
 		if FilePath != "" {
 			//	создаем экземпляр структуры хранения связки HASH<==>URL
-			shortenURL := ShortenURL{
-				HashURL: shortURL,
-				LongURL: longURL,
+			shortenURL := shortenURL{
+				hashURL: shortURL,
+				longURL: longURL,
 			}
-			//	создаем экземпляр WRITER в файл-хранилище HASH<==>URL
-			writtenURL, err := NewURLWriter(FilePath)
+			//	создаем экземпляр writer для файла-хранилища HASH<==>URL
+			writtenURL, err := newWriter(FilePath)
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer writtenURL.Close()
+			defer writtenURL.close()
 			//	производим запись в файл-хранилище связки HASH<==>URL
-			if err := writtenURL.WriteURL(&shortenURL); err != nil {
+			if err := writtenURL.write(&shortenURL); err != nil {
 				log.Fatal(err)
 			}
 		}

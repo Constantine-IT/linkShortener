@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -56,6 +58,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println("Ошибка парсинга JSON-тела входящего запроса:\n" + err.Error())
 		return
 	}
 	//	Проверяем на пустую строку вместо URL
@@ -64,9 +67,10 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//	проверяем URL на недопустимые символы
-	if strings.ContainsAny(JSONBody.URL, "{}[]()_ !*\n\t\\") {
-		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
+	//	проверяем URL на допустимый синтаксис
+	if _, err := url.ParseRequestURI(JSONBody.URL); err != nil {
+		http.Error(w, "Error with parsing your URL!", http.StatusBadRequest)
+		log.Println("Ошибка парсинга присланного URL:\n" + err.Error())
 		return
 	}
 
@@ -106,9 +110,10 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	longURL := string(inURL)
-	//	проверяем URL на недопустимые символы
-	if strings.ContainsAny(longURL, "{}[]()_ !*\n\t\\") {
-		http.Error(w, "There are forbidden symbols in the URL!", http.StatusBadRequest)
+	//	проверяем URL на допустимый синтаксис
+	if _, err := url.ParseRequestURI(longURL); err != nil {
+		http.Error(w, "Error with parsing your URL!", http.StatusBadRequest)
+		log.Println("Ошибка парсинга присланного URL:\n" + err.Error())
 		return
 	}
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL

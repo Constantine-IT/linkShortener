@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"compress/gzip"
+	"log"
 	"net/http"
 )
 
@@ -11,6 +12,7 @@ func DecompressGZIP(next http.Handler) http.Handler {
 			gz, err := gzip.NewReader(r.Body)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Println("Ошибка при декомпресии тела входящего запроса:\n" + err.Error())
 				return
 			}
 			r.Body = gz

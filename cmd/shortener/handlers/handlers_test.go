@@ -37,14 +37,14 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "Test #2: Request with forbidden symbols in URL",
+			name:        "Test #2: Request with non-absolute URL",
 			request:     "/",
 			requestType: http.MethodPost,
-			body:        "http://test.com/ahshshd*!",
+			body:        `test.com/ahshshd-wew?`,
 			want: want{
 				statusCode:  http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
-				body:        "There are forbidden symbols in the URL!\n",
+				body:        "Error with parsing your URL!\n",
 			},
 		},
 		{

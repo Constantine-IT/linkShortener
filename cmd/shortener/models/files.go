@@ -3,65 +3,69 @@ package models
 import (
 	"encoding/json"
 	"os"
+	"sync"
 )
 
 //	структура записи для сохраниния связки HASH<==>URL
-type ShortenURL struct {
-	HashURL string `json:"hash-url"`
-	LongURL string `json:"long-url"`
+type shortenURL struct {
+	hashURL string `json:"hash-url"`
+	longURL string `json:"long-url"`
 }
 
 //	структура файлового дескриптора для записи
-type URLWriter struct {
+type writer struct {
+	mutex   sync.Mutex
 	file    *os.File
 	encoder *json.Encoder
 }
 
 //	конструктор, создающий экземпляр файлового дескриптора для записи
-func NewURLWriter(fileName string) (*URLWriter, error) {
+func newWriter(fileName string) (*writer, error) {
 	//	файл открывается только на запись с добавлением в конец файла, если файла нет - создаем
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		return nil, err
 	}
-	return &URLWriter{
+	return &writer{
 		file:    file,
 		encoder: json.NewEncoder(file),
 	}, nil
 }
 
 // метод записи в файл для экземпляра файлового дескриптора для записи
-func (p *URLWriter) WriteURL(URL *ShortenURL) error {
+func (p *writer) write(URL *shortenURL) error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	return p.encoder.Encode(&URL)
 }
 
 // метод закрытия файла для экземпляра файлового дескриптора для записи
-func (p *URLWriter) Close() error {
+func (p *writer) close() error {
 	return p.file.Close()
 }
 
 //	структура файлового дескриптора для чтения
-type URLReader struct {
+type reader struct {
 	file    *os.File
 	decoder *json.Decoder
 }
 
 //	конструктор, создающий экземпляр файлового дескриптора для чтения
-func NewURLReader(fileName string) (*URLReader, error) {
+func newReader(fileName string) (*reader, error) {
 	//	файл открывается только на чтение, если файла нет - создаем
 	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return nil, err
 	}
-	return &URLReader{
+	return &reader{
 		file:    file,
 		decoder: json.NewDecoder(file),
 	}, nil
 }
 
 // метод чтения из файла для экземпляра файлового дескриптора для чтения
-func (c *URLReader) ReadURL() (*ShortenURL, error) {
-	shortenURL := &ShortenURL{}
+func (c *reader) read() (*shortenURL, error) {
+	shortenURL := &shortenURL{}
 	if err := c.decoder.Decode(&shortenURL); err != nil {
 		return nil, err
 	}
@@ -69,6 +73,6 @@ func (c *URLReader) ReadURL() (*ShortenURL, error) {
 }
 
 // метод закрытия файла для экземпляра файлового дескриптора для чтения
-func (c *URLReader) Close() error {
+func (c *reader) close() error {
 	return c.file.Close()
 }

@@ -10,10 +10,11 @@ func Routes() chi.Router {
 	// определяем роутер chi
 	r := chi.NewRouter()
 
-	// зададим встроенные middleware, чтобы улучшить стабильность приложения
+	// зададим middleware для поддержки компрессии тел запросов и ответов
 	r.Use(middleware.Compress(1, `text/plain`, `application/json`))
 	r.Use(middleware.AllowContentEncoding(`gzip`))
 	r.Use(DecompressGZIP)
+	// зададим встроенные middleware, чтобы улучшить стабильность приложения
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
