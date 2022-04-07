@@ -8,8 +8,8 @@ import (
 
 //	структура записи для сохраниния связки HASH<==>URL
 type shortenURL struct {
-	hashURL string `json:"hash-url"`
-	longURL string `json:"long-url"`
+	HashURL string `json:"hash-url"`
+	LongURL string `json:"long-url"`
 }
 
 //	структура файлового дескриптора для записи

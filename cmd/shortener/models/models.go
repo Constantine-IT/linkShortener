@@ -37,7 +37,7 @@ func InitialFulfilmentURLDB() {
 		//	записываем список считанных URL в log
 		log.Println(readedURL)
 		//	добавляем связку HASH<==>URL в таблицу в RAM
-		URLTable[readedURL.hashURL] = readedURL.longURL
+		URLTable[readedURL.HashURL] = readedURL.LongURL
 	}
 }
 
@@ -51,8 +51,8 @@ func Insert(shortURL, longURL string) {
 		if FilePath != "" {
 			//	создаем экземпляр структуры хранения связки HASH<==>URL
 			shortenURL := shortenURL{
-				hashURL: shortURL,
-				longURL: longURL,
+				HashURL: shortURL,
+				LongURL: longURL,
 			}
 			//	создаем экземпляр writer для файла-хранилища HASH<==>URL
 			writtenURL, err := newWriter(FilePath)
