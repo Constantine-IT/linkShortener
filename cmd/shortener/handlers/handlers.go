@@ -20,18 +20,18 @@ var Addr = "http://127.0.0.1:8080"
 
 //	вспомогательная функция, создающая HASH из longURL, и сохраняющая связку HASH<==>URL в БД
 //	возвращает короткий URL для отправки клиенту
-func saveShortURLlongURL(longURL string) string {
+func saveShortURLlongURL(longURL string) (string, error) {
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
 	md5URL := md5.Sum([]byte(longURL))
 	hashURL := fmt.Sprintf("%X", md5URL[0:4])
 
 	// вызов метода-вставки в структуру хранения связки HASH<==>longURL
-	models.Insert(hashURL, longURL)
+	err := models.Insert(hashURL, longURL)
 
 	// Изготавливаем  shortURL из адреса нашего сервера и HASH
 	shortURL := strings.Join([]string{Addr, hashURL}, "/")
-	return shortURL
+	return shortURL, err
 }
 
 //	Обработчики маршрутизатора
@@ -61,11 +61,6 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Ошибка парсинга JSON-тела входящего запроса:\n" + err.Error())
 		return
 	}
-	//	Проверяем на пустую строку вместо URL
-	if len(JSONBody.URL) == 0 {
-		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
-		return
-	}
 
 	//	проверяем URL на допустимый синтаксис
 	if _, err := url.ParseRequestURI(JSONBody.URL); err != nil {
@@ -75,7 +70,12 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL
-	shortURL := saveShortURLlongURL(JSONBody.URL)
+	shortURL, err := saveShortURLlongURL(JSONBody.URL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println("Ошибка сохранения URL:" + err.Error())
+		return
+	}
 
 	//	описываем структура создаваемого JSON вида {"result":"<shorten_url>"}
 	type ResultURL struct {
@@ -103,9 +103,9 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	inURL, err := io.ReadAll(r.Body)
-	//	проверяем на пустое тело запроса и/или другие ошибки чтения
-	if err != nil || len(inURL) == 0 {
-		http.Error(w, "There is no URL in your request BODY!", http.StatusBadRequest)
+	//	проверяем на ошибки чтения
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -117,7 +117,12 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
-	shortURL := saveShortURLlongURL(longURL)
+	shortURL, err := saveShortURLlongURL(longURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println("Ошибка сохранения URL:" + err.Error())
+		return
+	}
 
 	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в виде текста
 	w.Header().Set("Content-Type", "text/plain")

@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// таблица для хранения URL
+// URLTable - таблица для хранения URL
 var URLTable = make(map[string]string)
 
 //	если FilePath задан - при перезапуске сервера, список <shorten_URL> сохраняется в этом файле
@@ -26,7 +26,7 @@ func InitialFulfilmentURLDB() {
 	log.Println("Обнаружен файл сохраненных URL. Начинаем считывание:")
 	for {
 		//	считываем записи по одной из файла-хранилища HASH<==>URL
-		readedURL, err := fileReader.read()
+		readURL, err := fileReader.read()
 		//	когда дойдем до конца файла - выходим из цикла чтения
 		if errors.Is(err, io.EOF) {
 			break
@@ -35,14 +35,18 @@ func InitialFulfilmentURLDB() {
 			log.Fatal(err)
 		}
 		//	записываем список считанных URL в log
-		log.Println(readedURL)
+		log.Println(readURL)
 		//	добавляем связку HASH<==>URL в таблицу в RAM
-		URLTable[readedURL.HashURL] = readedURL.LongURL
+		URLTable[readURL.HashURL] = readURL.LongURL
 	}
 }
 
-// Метод для сохранения в БД связки короткого и длинного URL.
-func Insert(shortURL, longURL string) {
+// Insert - Метод для сохранения в БД связки короткого и длинного URL.
+func Insert(shortURL, longURL string) error {
+	//	пустые значения URL к вставке в хранилище не допускаются
+	if shortURL == "" || longURL == "" {
+		return errors.New("empty value is not allowed")
+	}
 	//	Проверяем наличие <shorten_URL> в списке сохраненных URL
 	//	если такой URL уже есть в базе, то повторную вставку не производим
 	if _, ok := URLTable[shortURL]; !ok {
@@ -66,9 +70,10 @@ func Insert(shortURL, longURL string) {
 			}
 		}
 	}
+	return nil
 }
 
-// Метод для нахождения длинного URL по HASH от <shorten_URL> из БД сохраненных URL
+// Get - Метод для нахождения длинного URL по HASH от <shorten_URL> из БД сохраненных URL
 func Get(shortURL string) (longURL string, flag bool) {
 	longURL, ok := URLTable[shortURL]
 	return longURL, ok
