@@ -27,7 +27,7 @@ func InitialFulfilmentURLDB() {
 	for {
 		//	считываем записи по одной из файла-хранилища HASH<==>URL
 		readedURL, err := fileReader.read()
-		//	когда дойдем до конца файла - выхоодим из цикла чтения
+		//	когда дойдем до конца файла - выходим из цикла чтения
 		if errors.Is(err, io.EOF) {
 			break
 		}

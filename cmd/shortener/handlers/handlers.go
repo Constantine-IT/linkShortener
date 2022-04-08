@@ -19,7 +19,7 @@ import (
 var Addr = "http://127.0.0.1:8080"
 
 //	вспомогательная функция, создающая HASH из longURL, и сохраняющая связку HASH<==>URL в БД
-//	возвращающает короткий URL для отправки клиенту
+//	возвращает короткий URL для отправки клиенту
 func saveShortURLlongURL(longURL string) string {
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm

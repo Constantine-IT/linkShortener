@@ -92,7 +92,7 @@ func TestResponseWithErrors(t *testing.T) {
 			},
 		},
 		{
-			name:        "Test #7: Request with URL in JSON body",
+			name:        "Test #7: Request with empty URL in JSON body",
 			request:     "/api/shorten",
 			requestType: http.MethodPost,
 			body:        `{"url":""}`,
