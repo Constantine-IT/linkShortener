@@ -29,16 +29,16 @@ func main() {
 	m.FilePath = *fileStoragePath
 
 	//	считываем переменные окружения, если они заданы - переопределяем соответствующие локальные переменные:
-	if u, flag := os.LookupEnv("SERVER_ADDRESS"); flag {
+	if u, flg := os.LookupEnv("SERVER_ADDRESS"); flg {
 		srvAddr = u
 	}
-	if u, flag := os.LookupEnv("BASE_URL"); flag {
+	if u, flg := os.LookupEnv("BASE_URL"); flg {
 		h.Addr = u
 	}
-	if u, flag := os.LookupEnv("FILE_STORAGE_PATH"); flag {
+	if u, flg := os.LookupEnv("FILE_STORAGE_PATH"); flg {
 		m.FilePath = u
 	}
-	
+
 	//	Первичное заполнение БД <shorten_URL> из файла-хранилища, если задан FILE_STORAGE_PATH
 	if m.FilePath != "" {
 		m.InitialFulfilmentURLDB()

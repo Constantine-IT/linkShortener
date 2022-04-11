@@ -4,11 +4,13 @@ import (
 	"testing"
 )
 
+//goland:noinspection SpellCheckingInspection,SpellCheckingInspection,SpellCheckingInspection
 func TestInsert(t *testing.T) {
 	type want struct {
 		shortURL string
 		longURL  string
 	}
+	//goland:noinspection ALL
 	tests := []struct {
 		name     string
 		shortURL string
@@ -34,7 +36,10 @@ func TestInsert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Insert(tt.shortURL, tt.longURL)
+			err := Insert(tt.shortURL, tt.longURL)
+			if err != nil {
+				t.Errorf("Error in INSERT method: %s", err.Error())
+			}
 			gotLongURL, gotFlag := Get(tt.want.shortURL)
 
 			if (gotFlag == true) && (gotLongURL != tt.want.longURL) {

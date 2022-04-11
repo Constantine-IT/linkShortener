@@ -16,6 +16,7 @@ import (
 //	receive URL_for_shorting in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside BODY,
 //	receive <shorten_URL> from client with GET method and response to it with initial URL in the field "location" in header
 
+//goland:noinspection ALL
 func TestShortURLJSONHandler(t *testing.T) {
 
 	type want struct {
@@ -81,6 +82,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 	}
 }
 
+//goland:noinspection ALL
 func TestShortURLHandler(t *testing.T) {
 
 	type want struct {

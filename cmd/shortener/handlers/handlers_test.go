@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//goland:noinspection ALL
 func TestResponseWithErrors(t *testing.T) {
 
 	type want struct {
@@ -18,6 +19,7 @@ func TestResponseWithErrors(t *testing.T) {
 		contentType string
 		body        string
 	}
+	//goland:noinspection SpellCheckingInspection
 	tests := []struct {
 		name        string
 		request     string
