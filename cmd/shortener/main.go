@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"os"
 
-	m "github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 type application struct {
 	errorLog    *log.Logger
 	infoLog     *log.Logger
 	baseURL     string
-	storage     *m.Storage
+	storage     *storage.Storage
 	fileStorage string
 	//database *mysql.dbModel
 }
@@ -54,13 +54,13 @@ func main() {
 		errorLog:    errorLog,
 		infoLog:     infoLog,
 		baseURL:     *BaseURL,
-		storage:     m.NewStorage(),
+		storage:     storage.NewStorage(),
 		fileStorage: *FileStorage,
 		//database: &mysql.dbModel{DB: db},
 	}
 	//	Первичное заполнение БД <shorten_URL> из файла-хранилища, если задан FILE_STORAGE_PATH
 	if app.fileStorage != "" {
-		m.InitialFulfilmentURLDB(app.storage, app.fileStorage)
+		storage.InitialFulfilmentURLDB(app.storage, app.fileStorage)
 	}
 
 	//	запуск сервера

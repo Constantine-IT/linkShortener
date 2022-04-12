@@ -12,10 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	m "github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
-//goland:noinspection ALL
 func TestResponseWithErrors(t *testing.T) {
 
 	type want struct {
@@ -114,7 +113,7 @@ func TestResponseWithErrors(t *testing.T) {
 		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
 		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
 		baseURL:     "http://127.0.0.1:8080",
-		storage:     m.NewStorage(),
+		storage:     storage.NewStorage(),
 		fileStorage: "",
 		//database: &mysql.dbModel{DB: db},
 	}
