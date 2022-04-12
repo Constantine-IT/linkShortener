@@ -22,7 +22,7 @@ func TestResponseWithErrors(t *testing.T) {
 		contentType string
 		body        string
 	}
-	//goland:noinspection SpellCheckingInspection
+
 	tests := []struct {
 		name        string
 		request     string
@@ -115,7 +115,6 @@ func TestResponseWithErrors(t *testing.T) {
 		baseURL:     "http://127.0.0.1:8080",
 		storage:     storage.NewStorage(),
 		fileStorage: "",
-		//database: &mysql.dbModel{DB: db},
 	}
 
 	for _, tt := range tests {

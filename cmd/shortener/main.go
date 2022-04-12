@@ -15,7 +15,6 @@ type application struct {
 	baseURL     string
 	storage     *storage.Storage
 	fileStorage string
-	//database *mysql.dbModel
 }
 
 func main() {
@@ -34,11 +33,6 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	//	значание флагов записываем в локальные переменные
-	//srvAddr := *serverAddress
-	//Addr := *baseURL
-	//FilePath := *fileStoragePath
-
 	//	считываем переменные окружения, если они заданы - переопределяем соответствующие локальные переменные:
 	if u, flg := os.LookupEnv("SERVER_ADDRESS"); flg {
 		*ServerAddress = u
@@ -56,9 +50,8 @@ func main() {
 		baseURL:     *BaseURL,
 		storage:     storage.NewStorage(),
 		fileStorage: *FileStorage,
-		//database: &mysql.dbModel{DB: db},
 	}
-	//	Первичное заполнение БД <shorten_URL> из файла-хранилища, если задан FILE_STORAGE_PATH
+	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 	if app.fileStorage != "" {
 		storage.InitialFulfilmentURLDB(app.storage, app.fileStorage)
 	}

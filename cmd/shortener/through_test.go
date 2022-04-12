@@ -57,7 +57,6 @@ func TestShortURLJSONHandler(t *testing.T) {
 		baseURL:     "http://127.0.0.1:8080",
 		storage:     storage.NewStorage(),
 		fileStorage: "",
-		//database: &mysql.dbModel{DB: db},
 	}
 
 	for _, tt := range tests {
@@ -95,7 +94,6 @@ func TestShortURLJSONHandler(t *testing.T) {
 	}
 }
 
-//goland:noinspection ALL
 func TestShortURLHandler(t *testing.T) {
 
 	type want struct {
@@ -133,7 +131,6 @@ func TestShortURLHandler(t *testing.T) {
 		baseURL:     "http://127.0.0.1:8080",
 		storage:     storage.NewStorage(),
 		fileStorage: "",
-		//database: &mysql.dbModel{DB: db},
 	}
 
 	for _, tt := range tests {

@@ -7,6 +7,7 @@ import (
 )
 
 //	Структуры и методы работы с файловым хранилищем URL
+
 //	структура записи для сохраниния связки HASH<==>URL
 type shortenURL struct {
 	HashURL string `json:"hash-url"`
