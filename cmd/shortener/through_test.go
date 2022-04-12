@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	m "github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	m "github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 //	These are integration tests with following flow:

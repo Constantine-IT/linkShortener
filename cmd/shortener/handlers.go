@@ -12,7 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 //	вспомогательная функция, создающая HASH из longURL, и сохраняющая связку HASH<==>URL в БД
@@ -24,7 +24,7 @@ func (app *application) saveURLtoDB(longURL string) (string, error) {
 	hashURL := fmt.Sprintf("%X", md5URL[0:4])
 
 	// вызов метода-вставки в структуру хранения связки HASH<==>longURL
-	err := models.Insert(hashURL, longURL, app.fileStorage, app.storage)
+	err := storage.Insert(hashURL, longURL, app.fileStorage, app.storage)
 
 	// Изготавливаем  shortURL из адреса нашего сервера и HASH
 	shortURL := strings.Join([]string{app.baseURL, hashURL}, "/")
@@ -139,7 +139,7 @@ func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Находим в базе URL соответствующий запрошенному HASH
-	longURL, flag := models.Get(hashURL, app.storage)
+	longURL, flag := storage.Get(hashURL, app.storage)
 	if !flag {
 		http.Error(w, "There is no such URL in our base!", http.StatusNotFound)
 		return

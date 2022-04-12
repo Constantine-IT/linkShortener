@@ -6,8 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	//h "github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
-	m "github.com/Constantine-IT/linkShortener/cmd/shortener/models"
+	m "github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 type application struct {
