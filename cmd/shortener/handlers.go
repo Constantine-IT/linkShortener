@@ -1,4 +1,4 @@
-package handlers
+package main
 
 import (
 	"crypto/md5"
@@ -15,29 +15,26 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 )
 
-//	Базовый адрес для <shorten_URL>. Может быть переопределен в main.go
-var Addr = "http://127.0.0.1:8080"
-
 //	вспомогательная функция, создающая HASH из longURL, и сохраняющая связку HASH<==>URL в БД
 //	возвращает короткий URL для отправки клиенту
-func saveShortURLlongURL(longURL string) (string, error) {
+func (app *application) saveURLtoDB(longURL string) (string, error) {
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
 	md5URL := md5.Sum([]byte(longURL))
 	hashURL := fmt.Sprintf("%X", md5URL[0:4])
 
 	// вызов метода-вставки в структуру хранения связки HASH<==>longURL
-	err := models.Insert(hashURL, longURL)
+	err := models.Insert(hashURL, longURL, app.fileStorage, app.storage)
 
 	// Изготавливаем  shortURL из адреса нашего сервера и HASH
-	shortURL := strings.Join([]string{Addr, hashURL}, "/")
+	shortURL := strings.Join([]string{app.baseURL, hashURL}, "/")
 	return shortURL, err
 }
 
 //	Обработчики маршрутизатора
 
 //	Обработчик POST с URL в виде JSON
-func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	jsonURL, err := io.ReadAll(r.Body) // считываем JSON из тела запроса
@@ -70,7 +67,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL
-	shortURL, err := saveShortURLlongURL(JSONBody.URL)
+	shortURL, err := app.saveURLtoDB(JSONBody.URL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println("Ошибка сохранения URL:" + err.Error())
@@ -99,7 +96,7 @@ func CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //	Обработчик POST с URL в виде текста
-func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	inURL, err := io.ReadAll(r.Body)
@@ -117,7 +114,7 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
-	shortURL, err := saveShortURLlongURL(longURL)
+	shortURL, err := app.saveURLtoDB(longURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println("Ошибка сохранения URL:" + err.Error())
@@ -131,7 +128,7 @@ func CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //	Обработчик GET на адрес короткого URL
-func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashURL := chi.URLParam(r, "hashURL")
 
@@ -142,7 +139,7 @@ func GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Находим в базе URL соответствующий запрошенному HASH
-	longURL, flag := models.Get(hashURL)
+	longURL, flag := models.Get(hashURL, app.storage)
 	if !flag {
 		http.Error(w, "There is no such URL in our base!", http.StatusNotFound)
 		return

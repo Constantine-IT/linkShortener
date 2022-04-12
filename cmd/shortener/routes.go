@@ -1,11 +1,11 @@
-package handlers
+package main
 
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func Routes() chi.Router {
+func (app *application) Routes() chi.Router {
 
 	// определяем роутер chi
 	r := chi.NewRouter()
@@ -24,10 +24,10 @@ func Routes() chi.Router {
 	//	Эндпоинт POST /api/shorten, принимающий в теле запроса JSON-объект {"url":"<some_url>"} и возвращающий в ответ объект {"result":"<shorten_url>"}.
 	//	Эндпоинт POST / принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 	r.Route("/", func(r chi.Router) {
-		r.Get("/{hashURL}", GetShortURLHandler)
-		r.Get("/", GetShortURLHandler)
-		r.Post("/api/shorten", CreateShortURLJSONHandler)
-		r.Post("/", CreateShortURLHandler)
+		r.Get("/{hashURL}", app.GetShortURLHandler)
+		r.Get("/", app.GetShortURLHandler)
+		r.Post("/api/shorten", app.CreateShortURLJSONHandler)
+		r.Post("/", app.CreateShortURLHandler)
 	})
 
 	return r

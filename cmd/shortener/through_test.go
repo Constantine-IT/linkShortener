@@ -1,10 +1,13 @@
-package handlers
+package main
 
 import (
 	"encoding/json"
+	m "github.com/Constantine-IT/linkShortener/cmd/shortener/models"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -16,7 +19,6 @@ import (
 //	receive URL_for_shorting in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside BODY,
 //	receive <shorten_URL> from client with GET method and response to it with initial URL in the field "location" in header
 
-//goland:noinspection ALL
 func TestShortURLJSONHandler(t *testing.T) {
 
 	type want struct {
@@ -47,9 +49,19 @@ func TestShortURLJSONHandler(t *testing.T) {
 			},
 		},
 	}
+
+	app := &application{
+		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		baseURL:     "http://127.0.0.1:8080",
+		storage:     m.NewStorage(),
+		fileStorage: "",
+		//database: &mysql.dbModel{DB: db},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := Routes()
+			r := app.Routes()
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 
@@ -71,7 +83,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
-			body = strings.TrimPrefix(body, Addr)
+			body = strings.TrimPrefix(body, app.baseURL)
 
 			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
@@ -113,9 +125,19 @@ func TestShortURLHandler(t *testing.T) {
 			},
 		},
 	}
+
+	app := &application{
+		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		baseURL:     "http://127.0.0.1:8080",
+		storage:     m.NewStorage(),
+		fileStorage: "",
+		//database: &mysql.dbModel{DB: db},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := Routes()
+			r := app.Routes()
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 
@@ -126,7 +148,7 @@ func TestShortURLHandler(t *testing.T) {
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
-			body = strings.TrimPrefix(body, Addr)
+			body = strings.TrimPrefix(body, app.baseURL)
 
 			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
