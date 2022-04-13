@@ -9,8 +9,8 @@ import (
 
 //	Структура хранилища URL в оперативной памяти
 type Storage struct {
-	data map[string]string
-	mu   sync.Mutex
+	data  map[string]string
+	mutex sync.Mutex
 }
 
 //	Констуктор хранилища URL в оперативной памяти
@@ -26,7 +26,8 @@ func InitialFulfilmentURLDB(storage *Storage, file string) {
 		log.Fatal(err)
 	}
 	defer fileReader.close()
-	log.Println("Обнаружен файл сохраненных URL. Начинаем считывание:")
+	storage.mutex.Lock()
+	defer storage.mutex.Unlock()
 	for {
 		//	считываем записи по одной из файла-хранилища HASH<==>URL
 		readURL, err := fileReader.read()
@@ -37,11 +38,7 @@ func InitialFulfilmentURLDB(storage *Storage, file string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		//	записываем список считанных URL в log
-		log.Println(readURL)
 		//	добавляем связку HASH<==>URL в таблицу в RAM
-		storage.mu.Lock()
-		defer storage.mu.Unlock()
 		storage.data[readURL.HashURL] = readURL.LongURL
 	}
 }

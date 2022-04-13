@@ -53,7 +53,9 @@ func main() {
 	}
 	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 	if app.fileStorage != "" {
+		infoLog.Printf("Обнаружен файл сохраненных URL: %s", *FileStorage)
 		storage.InitialFulfilmentURLDB(app.storage, app.fileStorage)
+		infoLog.Println("Сохраненные URL успешно считаны в RAM")
 	}
 
 	//	запуск сервера

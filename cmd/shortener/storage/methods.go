@@ -15,8 +15,8 @@ func Insert(shortURL, longURL, filePath string, storage *Storage) error {
 	}
 	//	Проверяем наличие <shorten_URL> в списке сохраненных URL
 	//	если такой URL уже есть в базе, то повторную вставку не производим
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
+	storage.mutex.Lock()
+	defer storage.mutex.Unlock()
 	if _, ok := storage.data[shortURL]; !ok {
 		storage.data[shortURL] = longURL
 		//	если файл для хранения URL не задан, то храним список только в RAM
@@ -43,8 +43,8 @@ func Insert(shortURL, longURL, filePath string, storage *Storage) error {
 
 // Get - Метод для нахождения длинного URL по HASH от <shorten_URL> из БД сохраненных URL
 func Get(shortURL string, storage *Storage) (longURL string, flag bool) {
-	storage.mu.Lock()
-	defer storage.mu.Unlock()
+	storage.mutex.Lock()
+	defer storage.mutex.Unlock()
 	longURL, ok := storage.data[shortURL]
 	return longURL, ok
 }
