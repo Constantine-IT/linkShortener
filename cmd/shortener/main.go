@@ -60,6 +60,7 @@ func main() {
 	infoLog.Printf("Сервер будет запущен по адресу: %s", *ServerAddress)
 	srv := &http.Server{
 		Addr:    *ServerAddress,
+		ErrorLog: errorLog,
 		Handler: app.Routes(),
 	}
 	errorLog.Fatal(srv.ListenAndServe())

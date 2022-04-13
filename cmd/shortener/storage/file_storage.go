@@ -48,6 +48,7 @@ func (p *writer) close() error {
 
 //	структура файлового дескриптора для чтения
 type reader struct {
+	mutex   sync.Mutex
 	file    *os.File
 	decoder *json.Decoder
 }
@@ -67,6 +68,8 @@ func newReader(fileName string) (*reader, error) {
 
 // метод чтения из файла для экземпляра файлового дескриптора для чтения
 func (c *reader) read() (*shortenURL, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	shortenURL := &shortenURL{}
 	if err := c.decoder.Decode(&shortenURL); err != nil {
 		return nil, err

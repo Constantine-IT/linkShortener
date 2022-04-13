@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -40,6 +39,7 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	jsonURL, err := io.ReadAll(r.Body) // считываем JSON из тела запроса
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		app.errorLog.Println("Ошибка чтения JSON-тела входящего запроса:" + err.Error())
 		return
 	}
 
@@ -55,14 +55,14 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Println("Ошибка парсинга JSON-тела входящего запроса:\n" + err.Error())
+		app.errorLog.Println("Ошибка парсинга JSON-тела входящего запроса:" + err.Error())
 		return
 	}
 
 	//	проверяем URL на допустимый синтаксис
 	if _, err := url.ParseRequestURI(JSONBody.URL); err != nil {
 		http.Error(w, "Error with parsing your URL!", http.StatusBadRequest)
-		log.Println("Ошибка парсинга присланного URL:\n" + err.Error())
+		app.errorLog.Println("Ошибка парсинга присланного URL:" + err.Error())
 		return
 	}
 
@@ -70,7 +70,7 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	shortURL, err := app.saveURLtoDB(JSONBody.URL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println("Ошибка сохранения URL:" + err.Error())
+		app.errorLog.Println("Ошибка сохранения URL:" + err.Error())
 		return
 	}
 
@@ -86,6 +86,7 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	shortJSONURL, err := json.Marshal(resultURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		app.errorLog.Println(err.Error())
 		return
 	}
 
@@ -103,6 +104,7 @@ func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 	//	проверяем на ошибки чтения
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		app.errorLog.Println(err.Error())
 		return
 	}
 
@@ -110,14 +112,14 @@ func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 	//	проверяем URL на допустимый синтаксис
 	if _, err := url.ParseRequestURI(longURL); err != nil {
 		http.Error(w, "Error with parsing your URL!", http.StatusBadRequest)
-		log.Println("Ошибка парсинга присланного URL:\n" + err.Error())
+		app.errorLog.Println("Ошибка парсинга присланного URL:" + err.Error())
 		return
 	}
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
 	shortURL, err := app.saveURLtoDB(longURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println("Ошибка сохранения URL:" + err.Error())
+		app.errorLog.Println("Ошибка сохранения URL:" + err.Error())
 		return
 	}
 
@@ -135,6 +137,7 @@ func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	//	проверяем указан ли HASH в коротком URL
 	if hashURL == "" {
 		http.Error(w, "ShortURL param is missed", http.StatusBadRequest)
+		app.errorLog.Println("ShortURL param is missed")
 		return
 	}
 
@@ -142,6 +145,7 @@ func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	longURL, flag := storage.Get(hashURL, app.storage)
 	if !flag {
 		http.Error(w, "There is no such URL in our base!", http.StatusNotFound)
+		app.errorLog.Println("There is no such URL in our base!")
 		return
 	}
 

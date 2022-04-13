@@ -15,11 +15,11 @@ func Insert(shortURL, longURL, filePath string, storage *Storage) error {
 	}
 	//	Проверяем наличие <shorten_URL> в списке сохраненных URL
 	//	если такой URL уже есть в базе, то повторную вставку не производим
+	storage.mu.Lock()
+	defer storage.mu.Unlock()
 	if _, ok := storage.data[shortURL]; !ok {
-		storage.mu.Lock()
-		defer storage.mu.Unlock()
 		storage.data[shortURL] = longURL
-		//	если файл для хранения URL не задан, то храним список только в RAM в URLTable
+		//	если файл для хранения URL не задан, то храним список только в RAM
 		if filePath != "" {
 			//	создаем экземпляр структуры хранения связки HASH<==>URL
 			shortenURL := shortenURL{
