@@ -16,14 +16,14 @@ import (
 
 //	вспомогательная функция, создающая HASH из longURL, и сохраняющая связку HASH<==>URL в БД
 //	возвращает короткий URL для отправки клиенту
-func (app *application) saveURLtoDB(longURL string) (string, error) {
+func (app *application) saveURLtoDB(longURL, userID string) (string, error) {
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
 	md5URL := md5.Sum([]byte(longURL))
 	hashURL := fmt.Sprintf("%X", md5URL[0:4])
 
 	// вызов метода-вставки в структуру хранения связки HASH<==>longURL
-	err := storage.Insert(hashURL, longURL, app.fileStorage, app.storage)
+	err := storage.Insert(hashURL, longURL, userID, app.fileStorage, app.storage)
 
 	// Изготавливаем  shortURL из адреса нашего сервера и HASH
 	shortURL := strings.Join([]string{app.baseURL, hashURL}, "/")
@@ -36,10 +36,17 @@ func (app *application) saveURLtoDB(longURL string) (string, error) {
 func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	//	считываем UserID из cookie запроса
+	requestUserID, err := r.Cookie("userid")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.errorLog.Println("There is no userid in request cookie:" + err.Error())
+		return
+	}
 	jsonURL, err := io.ReadAll(r.Body) // считываем JSON из тела запроса
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println("Ошибка чтения JSON-тела входящего запроса:" + err.Error())
+		app.errorLog.Println("JSON body read error:" + err.Error())
 		return
 	}
 
@@ -55,26 +62,26 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println("Ошибка парсинга JSON-тела входящего запроса:" + err.Error())
+		app.errorLog.Println("JSON body parsing error:" + err.Error())
 		return
 	}
 
 	//	проверяем URL на допустимый синтаксис
 	if _, err := url.ParseRequestURI(JSONBody.URL); err != nil {
 		http.Error(w, "Error with parsing your URL!", http.StatusBadRequest)
-		app.errorLog.Println("Ошибка парсинга присланного URL:" + err.Error())
+		app.errorLog.Println("Long URL parsing error:" + err.Error())
 		return
 	}
 
-	//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL
-	shortURL, err := app.saveURLtoDB(JSONBody.URL)
+	//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL + UserID
+	shortURL, err := app.saveURLtoDB(JSONBody.URL, requestUserID.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.errorLog.Println("Ошибка сохранения URL:" + err.Error())
+		app.errorLog.Println("URL save error:" + err.Error())
 		return
 	}
 
-	//	описываем структура создаваемого JSON вида {"result":"<shorten_url>"}
+	//	описываем структуру создаваемого JSON вида {"result":"<shorten_url>"}
 	type ResultURL struct {
 		Result string `json:"result"`
 	}
@@ -100,6 +107,14 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	//	считываем UserID из cookie запроса
+	requestUserID, err := r.Cookie("userid")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.errorLog.Println("There is no userid in request cookie:" + err.Error())
+		return
+	}
+
 	inURL, err := io.ReadAll(r.Body)
 	//	проверяем на ошибки чтения
 	if err != nil {
@@ -116,7 +131,7 @@ func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
-	shortURL, err := app.saveURLtoDB(longURL)
+	shortURL, err := app.saveURLtoDB(longURL, requestUserID.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.errorLog.Println("Ошибка сохранения URL:" + err.Error())
@@ -142,7 +157,7 @@ func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Находим в базе URL соответствующий запрошенному HASH
-	longURL, flag := storage.Get(hashURL, app.storage)
+	longURL, _, flag := storage.Get(hashURL, app.storage)
 	if !flag {
 		http.Error(w, "There is no such URL in our base!", http.StatusNotFound)
 		app.errorLog.Println("There is no such URL in our base!")
@@ -152,4 +167,41 @@ func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле "location" и делая Redirect на него
 	w.Header().Set("Location", longURL)
 	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+//	Обработчик GET для получения списка URL созданных пользователем
+func (app *application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Request) {
+
+	//	считываем UserID из cookie запроса
+	requestUserID, err := r.Cookie("userid")
+	if err != nil {
+		http.Error(w, "Cookie UserID error"+err.Error(), http.StatusInternalServerError)
+		app.errorLog.Println("There is no userid in request cookie:" + err.Error())
+		return
+	}
+
+	// Находим в базе URLs принадлежащие пользователю с данным UserID
+	slicedURL, flag := storage.GetByUserID(requestUserID.Value, app.storage)
+	if !flag {
+		http.Error(w, "There is no URL from this user in database", http.StatusNoContent)
+		app.errorLog.Println("There is no URL from this user in our database")
+		return
+	}
+
+	//	Добавляем к каждому HASH базовый адрес ASE_URL
+	for i, _ := range slicedURL {
+		slicedURL[i].HashURL = strings.Join([]string{app.baseURL, slicedURL[i].HashURL}, "/")
+	}
+	//	кодируем информацию в JSON
+	slicedJSONURL, err := json.Marshal(slicedURL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.errorLog.Println(err.Error())
+		return
+	}
+
+	// Изготавливаем и возвращаем ответ, вставляя список URLs пользователя с UserID в тело ответа в JSON виде
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(slicedJSONURL) //	пишем JSON с URL в тело ответа
 }

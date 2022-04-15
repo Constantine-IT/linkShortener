@@ -12,6 +12,7 @@ import (
 type shortenURL struct {
 	HashURL string `json:"hash-url"`
 	LongURL string `json:"long-url"`
+	UserID  string `json:"user-id"`
 }
 
 //	структура файлового дескриптора для записи
