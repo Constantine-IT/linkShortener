@@ -14,18 +14,19 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
-//	вспомогательная функция, создающая HASH из longURL, и сохраняющая связку HASH<==>URL в БД
+//	вспомогательная функция, создающая HASH из связки (URL + UserID),
+//	и сохраняющая связку HASH<==>URL+UserID в БД
 //	возвращает короткий URL для отправки клиенту
 func (app *application) saveURLtoDB(longURL, userID string) (string, error) {
 
 	// изготавливаем HASH из входящего URL с помощью MD5 hash algorithm
-	md5URL := md5.Sum([]byte(longURL))
+	md5URL := md5.Sum([]byte(longURL + userID))
 	hashURL := fmt.Sprintf("%X", md5URL[0:4])
 
-	// вызов метода-вставки в структуру хранения связки HASH<==>longURL
+	// вызов метода-вставки в структуру хранения связки HASH<==>URL+UserID
 	err := storage.Insert(hashURL, longURL, userID, app.fileStorage, app.storage)
 
-	// Изготавливаем  shortURL из адреса нашего сервера и HASH
+	// Изготавливаем  <shorten_URL> из базового адреса нашего сервера и HASH
 	shortURL := strings.Join([]string{app.baseURL, hashURL}, "/")
 	return shortURL, err
 }

@@ -16,7 +16,7 @@ func TestInsert(t *testing.T) {
 		longURL  string
 		want     want
 	}{
-		{name: "Data Model test #1: POST longURL then GET with right shortURL",
+		{name: "Data methods test #1: POST longURL then GET with right shortURL",
 			shortURL: "SDFGHJK",
 			longURL:  "http://test.test/test1",
 			want: want{
@@ -24,7 +24,7 @@ func TestInsert(t *testing.T) {
 				longURL:  "http://test.test/test1",
 			},
 		},
-		{name: "Data Model test #2: POST longURL then GET with wrong shortURL",
+		{name: "Data methods test #2: POST longURL then GET with wrong shortURL",
 			shortURL: "QWERTYU",
 			longURL:  "http://test.test/test1",
 			want: want{
