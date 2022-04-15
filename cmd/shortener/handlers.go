@@ -189,7 +189,7 @@ func (app *application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	//	Добавляем к каждому HASH базовый адрес ASE_URL
-	for i, _ := range slicedURL {
+	for i := range slicedURL {
 		slicedURL[i].HashURL = strings.Join([]string{app.baseURL, slicedURL[i].HashURL}, "/")
 	}
 	//	кодируем информацию в JSON
