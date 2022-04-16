@@ -53,6 +53,9 @@ func main() {
 	}
 
 	//	если заданы параметры соединения с базой данных PostgreSQL, то открываем connect
+
+	infoLog.Println("*DatabaseDSN = " + (*DatabaseDSN))
+
 	var db *sql.DB
 	if *DatabaseDSN != "" {
 		db, err := openDB(*DatabaseDSN)
@@ -63,6 +66,7 @@ func main() {
 		defer db.Close()
 	}
 
+	infoLog.Println(db)
 	infoLog.Println("DB is opened")
 
 	app := &application{
