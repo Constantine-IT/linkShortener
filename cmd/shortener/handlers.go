@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
@@ -210,7 +211,8 @@ func (app *application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Req
 //	PingDataBaseHandler - обработчик проверки доступности базы данных через GET /ping
 func (app *application) PingDataBaseHandler(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Println("PING DataBase")
-	err := app.database.DB.Ping()
+	//err := app.database.DB.Ping()
+	err := errors.New("test test test")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {

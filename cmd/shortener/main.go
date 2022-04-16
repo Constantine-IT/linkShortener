@@ -62,8 +62,8 @@ func main() {
 		}
 		defer db.Close()
 	}
-	
-	infoLog.Println("DB connector open:")
+
+	infoLog.Println("DB is opened")
 
 	app := &application{
 		errorLog:    errorLog,
@@ -74,7 +74,7 @@ func main() {
 		fileStorage: *FileStorage,
 	}
 
-	infoLog.Println("APP crated")
+	infoLog.Println("APP struct created")
 
 	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 	if *FileStorage != "" {
@@ -102,5 +102,6 @@ func openDB(dsn string) (*sql.DB, error) {
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
+	log.Println("DB is opening")
 	return db, nil
 }
