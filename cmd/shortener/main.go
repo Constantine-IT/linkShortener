@@ -53,21 +53,12 @@ func main() {
 	}
 
 	//	если заданы параметры соединения с базой данных PostgreSQL, то открываем connect
-
-	infoLog.Println("*DatabaseDSN = " + (*DatabaseDSN))
-
-	var db *sql.DB
-	if *DatabaseDSN != "" {
-		db, err := openDB(*DatabaseDSN)
-		if err != nil {
-			db = nil
-			errorLog.Println("Can't open DataBase:" + err.Error())
-		}
-		defer db.Close()
+	db, err := sql.Open("pgx", *DatabaseDSN)
+	if err != nil {
+		db = nil
+		errorLog.Println("Can't open DataBase:" + err.Error())
 	}
-
-	infoLog.Println(db)
-	infoLog.Println("DB is opened")
+	defer db.Close()
 
 	app := &application{
 		errorLog:    errorLog,
@@ -95,17 +86,4 @@ func main() {
 		Handler:  app.Routes(),
 	}
 	errorLog.Fatal(srv.ListenAndServe())
-}
-
-func openDB(dsn string) (*sql.DB, error) {
-	//	открываем базу данных PostgreSQL версии 10+
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		return nil, err
-	}
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-	log.Println("DB is opening")
-	return db, nil
 }

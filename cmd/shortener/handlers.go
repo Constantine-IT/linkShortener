@@ -209,13 +209,14 @@ func (app *application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Req
 
 //	PingDataBaseHandler - обработчик проверки доступности базы данных через GET /ping
 func (app *application) PingDataBaseHandler(w http.ResponseWriter, r *http.Request) {
-	app.infoLog.Println("PING DataBase")
+	if app.database.DB == nil {
+		http.Error(w, "DataBase DSN parameter wasn't set", http.StatusInternalServerError)
+		return
+	}
 	err := app.database.DB.Ping()
-	// err := errors.New("test test test")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		http.Error(w, http.StatusText(200), http.StatusOK)
 	}
-	app.infoLog.Println("PING DataBase is OK")
 }
