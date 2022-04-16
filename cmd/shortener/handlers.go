@@ -14,7 +14,7 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
-//	вспомогательная функция, создающая HASH из связки (URL + UserID),
+//	saveURLtoDB - вспомогательная функция, создающая HASH из связки (URL + UserID),
 //	и сохраняющая связку HASH<==>URL+UserID в БД
 //	возвращает короткий URL для отправки клиенту
 func (app *application) saveURLtoDB(longURL, userID string) (string, error) {
@@ -33,7 +33,7 @@ func (app *application) saveURLtoDB(longURL, userID string) (string, error) {
 
 //	Обработчики маршрутизатора
 
-//	Обработчик POST с URL в виде JSON
+//	CreateShortURLJSONHandler - обработчик POST с URL в виде JSON
 func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -104,7 +104,7 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	w.Write(shortJSONURL) //	пишем JSON с URL в тело ответа
 }
 
-//	Обработчик POST с URL в виде текста
+//	CreateShortURLHandler - обработчик POST с URL в виде текста
 func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -170,7 +170,7 @@ func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-//	Обработчик GET для получения списка URL созданных пользователем
+//	GetURLByUserIDHandler - обработчик GET для получения списка URL созданных пользователем
 func (app *application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	//	считываем UserID из cookie запроса
@@ -205,4 +205,16 @@ func (app *application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(slicedJSONURL) //	пишем JSON с URL в тело ответа
+}
+
+//	PingDataBaseHandler - обработчик проверки доступности базы данных через GET /ping
+func (app *application) PingDataBaseHandler(w http.ResponseWriter, r *http.Request) {
+
+	err := app.database.DB.Ping()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		http.Error(w, http.StatusText(200), http.StatusOK)
+	}
+
 }

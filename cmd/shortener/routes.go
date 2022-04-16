@@ -23,12 +23,17 @@ func (app *application) Routes() chi.Router {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	//	Эндпоинт GET /api/user/urls считывает UserID из cookie запроса и выдаёт все URL, сохраненные этим пользователем.
 	//	Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
+	//	Эндпоинт GET /ping проверяет доступность базы данных, выдает ответ с кодом 200, если доступна, и 500 - если не доступна.
 	//	Эндпоинт POST /api/shorten, принимающий в теле запроса JSON-объект {"url":"<some_url>"} и возвращающий в ответ объект {"result":"<shorten_url>"}.
 	//	Эндпоинт POST / принимает в теле запроса строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
+	//	Эндпоинт POST /api/shorten - аналогичен предыдущему, но принимает и отдает информацию в виде JSON в теле запроса/ответа.
+
 	r.Route("/", func(r chi.Router) {
 		r.Get("/api/user/urls", app.GetURLByUserIDHandler)
 		r.Get("/{hashURL}", app.GetShortURLHandler)
+		r.Get("/ping", app.PingDataBaseHandler)
 		r.Get("/", app.GetShortURLHandler)
 		r.Post("/api/shorten", app.CreateShortURLJSONHandler)
 		r.Post("/", app.CreateShortURLHandler)
