@@ -31,7 +31,7 @@ func main() {
 	//	Считываем флаги запуска из командной строки и задаём значения по умолчанию, если флаг при запуске не указан
 	ServerAddress := flag.String("a", "127.0.0.1:8080", "SERVER_ADDRESS - адрес запуска HTTP-сервера")
 	BaseURL := flag.String("b", "http://127.0.0.1:8080", "BASE_URL - базовый адрес результирующего сокращённого URL")
-	DatabaseDSN := flag.String("d", "", "DATABASE_DSN - адресом подключения к БД (PostgreSQL)")
+	DatabaseDSN := flag.String("d", "", "DATABASE_DSN - адрес подключения к БД (PostgreSQL)")
 	FileStorage := flag.String("f", "", "FILE_STORAGE_PATH - путь до файла с сокращёнными URL")
 	flag.Parse()
 
@@ -56,12 +56,14 @@ func main() {
 	var db *sql.DB
 	if *DatabaseDSN != "" {
 		db, err := openDB(*DatabaseDSN)
-		defer db.Close()
 		if err != nil {
 			db = nil
 			errorLog.Println("Can't open DataBase:" + err.Error())
 		}
+		defer db.Close()
 	}
+	
+	infoLog.Println("DB connector open:")
 
 	app := &application{
 		errorLog:    errorLog,
@@ -71,6 +73,9 @@ func main() {
 		database:    &storage.DatabaseModel{DB: db},
 		fileStorage: *FileStorage,
 	}
+
+	infoLog.Println("APP crated")
+
 	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 	if *FileStorage != "" {
 		infoLog.Printf("Обнаружен файл сохраненных URL: %s", *FileStorage)
