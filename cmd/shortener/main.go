@@ -52,11 +52,10 @@ func main() {
 		*FileStorage = u
 	}
 
-	//	если заданы параметры соединения с базой данных PostgreSQL, то открываем connect
+	//	открываем connect с базой данных PostgreSQL по указанному DATABASE_DSN
 	db, err := sql.Open("pgx", *DatabaseDSN)
 	if err != nil {
-		db = nil
-		errorLog.Println("Can't open DataBase:" + err.Error())
+		errorLog.Println(err.Error())
 	}
 	defer db.Close()
 
@@ -69,13 +68,18 @@ func main() {
 		fileStorage: *FileStorage,
 	}
 
-	infoLog.Println("APP struct created")
+	if err := app.database.DB.Ping(); err != nil {
+		app.database = nil
+		errorLog.Println("DataBase wasn't set")
+	}
 
 	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 	if *FileStorage != "" {
 		infoLog.Printf("Обнаружен файл сохраненных URL: %s", *FileStorage)
 		storage.InitialFulfilmentURLDB(app.storage, app.fileStorage)
 		infoLog.Println("Сохраненные URL успешно считаны в RAM")
+	} else {
+		errorLog.Println("FileStorage wasn't set")
 	}
 
 	//	запуск сервера
