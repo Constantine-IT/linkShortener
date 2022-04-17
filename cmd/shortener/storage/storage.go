@@ -3,7 +3,25 @@ package storage
 import (
 	"errors"
 	"log"
+	"sync"
 )
+
+//	rowStorage - структура записи в хранилище URL
+type rowStorage struct {
+	longURL string
+	userID  string
+}
+
+//	Storage - структура хранилища URL
+type Storage struct {
+	data  map[string]rowStorage
+	mutex sync.Mutex
+}
+
+//	Констуктор хранилища URL в оперативной памяти
+func NewStorage() *Storage {
+	return &Storage{data: make(map[string]rowStorage)}
+}
 
 // Методы работы с хранилищем URL
 
