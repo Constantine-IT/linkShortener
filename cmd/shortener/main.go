@@ -77,6 +77,7 @@ func main() {
 	if err := app.database.DB.Ping(); err != nil {
 		app.database = nil
 		infoLog.Println("DataBase wasn't set")
+		infoLog.Println("Server works with structures in RAM")
 	} else {
 		//	если база данных доступна, то работаем только с ней
 		app.database.Create()
@@ -88,13 +89,13 @@ func main() {
 
 	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 	if app.fileStorage != "" {
-		infoLog.Printf("File storage with saved URL found: %s", app.fileStorage)
+		infoLog.Printf("File storage with saved URL was found: %s", app.fileStorage)
 		storage.InitialURLFulfilment(app.storage, app.fileStorage)
-		infoLog.Println("Saved URLs loaded in RAM")
+		infoLog.Println("Saved URLs were loaded in RAM")
+		infoLog.Println("All new URLs will be saved in file storage")
 	} else {
 		//	если файловое хранилище не задано, то работаем только в оперативной памяти
 		infoLog.Println("FileStorage wasn't set")
-		infoLog.Println("Server works only with structures in RAM")
 	}
 
 	//	запуск сервера
