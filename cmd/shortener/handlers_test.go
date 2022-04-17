@@ -38,7 +38,7 @@ func TestResponseWithErrors(t *testing.T) {
 			want: want{
 				statusCode:  http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
-				body:        "Error with parsing your URL!\n",
+				body:        "Error with URL parsing\n",
 			},
 		},
 		{
@@ -49,7 +49,7 @@ func TestResponseWithErrors(t *testing.T) {
 			want: want{
 				statusCode:  http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
-				body:        "Error with parsing your URL!\n",
+				body:        "Error with URL parsing\n",
 			},
 		},
 		{
@@ -104,7 +104,7 @@ func TestResponseWithErrors(t *testing.T) {
 			want: want{
 				statusCode:  http.StatusBadRequest,
 				contentType: "text/plain; charset=utf-8",
-				body:        "Error with parsing your URL!\n",
+				body:        "Error with URL parsing\n",
 			},
 		},
 	}

@@ -87,7 +87,7 @@ func (c *reader) close() error {
 }
 
 //	Метод первичного заполнения хранилища URL из файла сохраненных URL, при старте сервера
-func InitialFulfilmentURLDB(storage *Storage, file string) {
+func InitialURLFulfilment(storage *Storage, file string) {
 	//	создаем экземпляр reader для файла-хранилища HASH<==>URL
 	fileReader, err := newReader(file)
 	if err != nil {

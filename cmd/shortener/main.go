@@ -17,7 +17,7 @@ type application struct {
 	infoLog     *log.Logger
 	baseURL     string
 	storage     *storage.Storage
-	database    *storage.DatabaseModel
+	database    *storage.Database
 	fileStorage string
 }
 
@@ -64,21 +64,33 @@ func main() {
 		infoLog:     infoLog,
 		baseURL:     *BaseURL,
 		storage:     storage.NewStorage(),
-		database:    &storage.DatabaseModel{DB: db},
+		database:    &storage.Database{DB: db},
 		fileStorage: *FileStorage,
 	}
 
+	//	Приоритетность в использовании ресурсов сохранения информации URL (по убыванию приоритета):
+	//	1.	Внешняя база данных, параметры соединения с которой задаются через DATABASE_DSN
+	//	2.	Если БД не задана, то используем файловое хранилище (задаваемое через FILE_STORAGE_PATH) и оперативную память
+	//	3.	Если не заданы ни БД, ни файловое хранилище, то работаем только с оперативной памятью - структура storage.Storage
+
+	//	проверяем доступность базы данных
 	if err := app.database.DB.Ping(); err != nil {
 		app.database = nil
 		errorLog.Println("DataBase wasn't set")
+	} else {
+		//	если база данных доступна, то работаем только с ней
+		app.database.Create()
+		app.storage = nil
+		app.fileStorage = ""
 	}
 
 	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
-	if *FileStorage != "" {
-		infoLog.Printf("Обнаружен файл сохраненных URL: %s", *FileStorage)
-		storage.InitialFulfilmentURLDB(app.storage, app.fileStorage)
+	if app.fileStorage != "" {
+		infoLog.Printf("Обнаружен файл сохраненных URL: %s", app.fileStorage)
+		storage.InitialURLFulfilment(app.storage, app.fileStorage)
 		infoLog.Println("Сохраненные URL успешно считаны в RAM")
 	} else {
+		//	если файловое хранилище не задано, то работаем только в оперативной памяти
 		errorLog.Println("FileStorage wasn't set")
 	}
 
