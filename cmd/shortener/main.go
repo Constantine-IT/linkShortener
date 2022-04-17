@@ -76,22 +76,25 @@ func main() {
 	//	проверяем доступность базы данных
 	if err := app.database.DB.Ping(); err != nil {
 		app.database = nil
-		errorLog.Println("DataBase wasn't set")
+		infoLog.Println("DataBase wasn't set")
 	} else {
 		//	если база данных доступна, то работаем только с ней
 		app.database.Create()
 		app.storage = nil
 		app.fileStorage = ""
+		infoLog.Println("DataBase connection has established: " + *DatabaseDSN)
+		infoLog.Println("Server works only with DB, without file storages or in-memory structures")
 	}
 
 	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 	if app.fileStorage != "" {
-		infoLog.Printf("Обнаружен файл сохраненных URL: %s", app.fileStorage)
+		infoLog.Printf("File storage with saved URL found: %s", app.fileStorage)
 		storage.InitialURLFulfilment(app.storage, app.fileStorage)
-		infoLog.Println("Сохраненные URL успешно считаны в RAM")
+		infoLog.Println("Saved URLs loaded in RAM")
 	} else {
 		//	если файловое хранилище не задано, то работаем только в оперативной памяти
-		errorLog.Println("FileStorage wasn't set")
+		infoLog.Println("FileStorage wasn't set")
+		infoLog.Println("Server works only with structures in RAM")
 	}
 
 	//	запуск сервера
