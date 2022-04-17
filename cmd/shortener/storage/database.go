@@ -46,7 +46,7 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 
 	stmt := `select "hash", "longurl" from "shorten_urls" where "userid" = $1`
 	rows, err := d.DB.Query(stmt, userID)
-	if err != nil {
+	if err != nil || rows.Err() != nil {
 		return nil, false
 	}
 	for rows.Next() {
