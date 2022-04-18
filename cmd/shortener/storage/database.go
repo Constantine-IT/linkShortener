@@ -85,8 +85,8 @@ func (d *Database) Create() error {
 
 	_, err := d.DB.Exec(`create table "shorten_urls" (
     "hash" text constraint hash_pk primary key not null,
-    "userid" text constraint unique not null,
-    "longurl" text not null)`)
+    "userid" text not null,
+    "longurl" text constraint unique_longurl unique not null)`)
 	log.Println("table shorten_urls created")
 	if err != nil {
 		return err
