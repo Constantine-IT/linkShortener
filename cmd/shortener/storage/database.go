@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"log"
 )
 
 //	Database - оределяет тип, который обертывает пул подключения sql.DB
@@ -16,8 +17,10 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 	stmt := `insert into "shorten_urls" ("hash", "userid", "longurl") values ($1, $2, $3)`
 	_, err := d.DB.Exec(stmt, hash, userID, longURL)
 	if err != nil {
+		log.Println("INSERT failed")
 		return err
 	} else {
+		log.Println("INSERT was successful")
 		return nil
 	}
 }
@@ -29,6 +32,7 @@ func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
 	stmt := `select "longurl", "userid" from "shorten_urls" where "hash" = $1`
 	err := d.DB.QueryRow(stmt, hash).Scan(url, user)
 	if err != nil {
+		log.Println("SELECT by hash failed")
 		return "", "", false
 	}
 
@@ -65,7 +69,7 @@ func (d *Database) Create() error {
     "hash" text constraint hash_pk primary key not null,
     "userid" text not null,
     "longurl" text not null)`)
-
+	log.Panicln("table shorten_urls created")
 	if err != nil {
 		return err
 	}

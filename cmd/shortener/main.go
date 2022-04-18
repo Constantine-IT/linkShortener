@@ -74,32 +74,31 @@ func main() {
 	//	3.	Если не заданы ни БД, ни файловое хранилище, то работаем только с оперативной памятью - структура storage.Storage
 
 	//	проверяем доступность базы данных
-	if err := app.database.DB.Ping(); err != nil {
-		app.database = nil
-		infoLog.Println("DataBase wasn't set")
-		infoLog.Println("Server works with structures in RAM")
-	} else {
+	if err := app.database.DB.Ping(); err == nil {
 		//	если база данных доступна, то работаем только с ней
 		app.database.Create()
 		app.storage = nil
 		app.fileStorage = ""
 		infoLog.Println("DataBase connection has established: " + *DatabaseDSN)
-		infoLog.Println("Server works only with DB, without file storages or in-memory structures")
-	}
-
-	//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
-	if app.fileStorage != "" {
-		infoLog.Printf("File storage with saved URL was found: %s", app.fileStorage)
-		storage.InitialURLFulfilment(app.storage, app.fileStorage)
-		infoLog.Println("Saved URLs were loaded in RAM")
-		infoLog.Println("All new URLs will be saved in file storage")
+		infoLog.Println("Server works only with DB, without file storages or RAM structures")
 	} else {
-		//	если файловое хранилище не задано, то работаем только в оперативной памяти
-		infoLog.Println("FileStorage wasn't set")
+		app.database = nil
+		infoLog.Println("DataBase wasn't set")
+		//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
+		if app.fileStorage != "" {
+			infoLog.Printf("File storage with saved URL was found: %s", app.fileStorage)
+			storage.InitialURLFulfilment(app.storage, app.fileStorage)
+			infoLog.Println("Saved URLs were loaded in RAM")
+			infoLog.Println("All new URLs will be saved in file storage")
+		} else {
+			//	если файловое хранилище не задано, то работаем только в оперативной памяти
+			infoLog.Println("FileStorage wasn't set")
+		}
+		infoLog.Println("Server works with structures in RAM")
 	}
 
 	//	запуск сервера
-	infoLog.Printf("Сервер будет запущен по адресу: %s", *ServerAddress)
+	infoLog.Printf("Server started at address: %s", *ServerAddress)
 	srv := &http.Server{
 		Addr:     *ServerAddress,
 		ErrorLog: errorLog,
