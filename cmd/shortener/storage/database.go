@@ -69,7 +69,7 @@ func (d *Database) Create() error {
     "hash" text constraint hash_pk primary key not null,
     "userid" text not null,
     "longurl" text not null)`)
-	log.Panicln("table shorten_urls created")
+	log.Println("table shorten_urls created")
 	if err != nil {
 		return err
 	}
