@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -51,12 +51,13 @@ func TestShortURLJSONHandler(t *testing.T) {
 		},
 	}
 
-	app := &application{
-		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
-		baseURL:     "http://127.0.0.1:8080",
-		storage:     storage.NewStorage(),
-		fileStorage: "",
+	app := &Application{
+		ErrorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		InfoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		BaseURL:     "http://127.0.0.1:8080",
+		Storage:     storage.NewStorage(),
+		Database:    nil,
+		FileStorage: "",
 	}
 
 	for _, tt := range tests {
@@ -83,7 +84,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
-			body = strings.TrimPrefix(body, app.baseURL)
+			body = strings.TrimPrefix(body, app.BaseURL)
 
 			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
@@ -125,12 +126,13 @@ func TestShortURLHandler(t *testing.T) {
 		},
 	}
 
-	app := &application{
-		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
-		baseURL:     "http://127.0.0.1:8080",
-		storage:     storage.NewStorage(),
-		fileStorage: "",
+	app := &Application{
+		ErrorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		InfoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		BaseURL:     "http://127.0.0.1:8080",
+		Storage:     storage.NewStorage(),
+		Database:    nil,
+		FileStorage: "",
 	}
 
 	for _, tt := range tests {
@@ -146,7 +148,7 @@ func TestShortURLHandler(t *testing.T) {
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
-			body = strings.TrimPrefix(body, app.baseURL)
+			body = strings.TrimPrefix(body, app.BaseURL)
 
 			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")

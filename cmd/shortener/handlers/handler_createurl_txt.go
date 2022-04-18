@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"io"
@@ -7,14 +7,14 @@ import (
 )
 
 //	CreateShortURLHandler - обработчик POST с URL в виде текста
-func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	//	считываем UserID из cookie запроса
 	requestUserID, err := r.Cookie("userid")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.errorLog.Println("There is no userid in request cookie:" + err.Error())
+		app.ErrorLog.Println("There is no userid in request cookie:" + err.Error())
 		return
 	}
 
@@ -22,7 +22,7 @@ func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 	//	проверяем на ошибки чтения
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println(err.Error())
+		app.ErrorLog.Println(err.Error())
 		return
 	}
 
@@ -30,14 +30,14 @@ func (app *application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 	//	проверяем URL на допустимый синтаксис
 	if _, err := url.ParseRequestURI(longURL); err != nil {
 		http.Error(w, "Error with URL parsing", http.StatusBadRequest)
-		app.errorLog.Println("Error with URL parsing:" + err.Error())
+		app.ErrorLog.Println("Error with URL parsing:" + err.Error())
 		return
 	}
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
 	shortURL, err := app.saveURLtoDB(longURL, requestUserID.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.errorLog.Println("Error with saving URL:" + err.Error())
+		app.ErrorLog.Println("Error with saving URL:" + err.Error())
 		return
 	}
 

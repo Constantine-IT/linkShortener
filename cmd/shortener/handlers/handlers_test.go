@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"io/ioutil"
@@ -109,12 +109,13 @@ func TestResponseWithErrors(t *testing.T) {
 		},
 	}
 
-	app := &application{
-		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
-		baseURL:     "http://127.0.0.1:8080",
-		storage:     storage.NewStorage(),
-		fileStorage: "",
+	app := &Application{
+		ErrorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		InfoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		BaseURL:     "http://127.0.0.1:8080",
+		Storage:     storage.NewStorage(),
+		Database:    nil,
+		FileStorage: "",
 	}
 
 	for _, tt := range tests {

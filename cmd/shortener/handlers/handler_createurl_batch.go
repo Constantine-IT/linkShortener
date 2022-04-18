@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -8,14 +8,14 @@ import (
 )
 
 //	CreateShortURLBatchHandler - обработчик POST с пакетом URL в виде JSON
-func (app *application) CreateShortURLBatchHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) CreateShortURLBatchHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	//	считываем UserID из cookie запроса
 	requestUserID, err := r.Cookie("userid")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.errorLog.Println("There is no userid in request cookie:" + err.Error())
+		app.ErrorLog.Println("There is no userid in request cookie:" + err.Error())
 		return
 	}
 
@@ -23,7 +23,7 @@ func (app *application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 	jsonURL, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println("JSON body read error:" + err.Error())
+		app.ErrorLog.Println("JSON body read error:" + err.Error())
 		return
 	}
 
@@ -50,7 +50,7 @@ func (app *application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println("JSON body parsing error:" + err.Error())
+		app.ErrorLog.Println("JSON body parsing error:" + err.Error())
 		return
 	}
 
@@ -59,7 +59,7 @@ func (app *application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 		//	проверяем URL на допустимый синтаксис
 		if _, err := url.ParseRequestURI(incomingURLlist[i].OriginalURL); err != nil {
 			http.Error(w, "Error with URL parsing", http.StatusBadRequest)
-			app.errorLog.Println("Error with URL parsing" + err.Error())
+			app.ErrorLog.Println("Error with URL parsing" + err.Error())
 			return
 		}
 
@@ -67,10 +67,10 @@ func (app *application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 		shortURL, err := app.saveURLtoDB(incomingURLlist[i].OriginalURL, requestUserID.Value)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			app.errorLog.Println("URL save error:" + err.Error())
+			app.ErrorLog.Println("URL save error:" + err.Error())
 			return
 		}
-		
+
 		//	создаем исходящий JSON список коротких URL
 		outgoingURLlist = append(outgoingURLlist, outgoingList{incomingURLlist[i].CorrelationID, shortURL})
 	}
@@ -79,7 +79,7 @@ func (app *application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 	shortJSONURL, err := json.Marshal(outgoingURLlist)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println(err.Error())
+		app.ErrorLog.Println(err.Error())
 		return
 	}
 

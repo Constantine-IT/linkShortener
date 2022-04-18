@@ -9,9 +9,11 @@ import (
 
 	_ "github.com/jackc/pgx/stdlib"
 
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
+/*
 type application struct {
 	errorLog    *log.Logger
 	infoLog     *log.Logger
@@ -20,6 +22,8 @@ type application struct {
 	database    *storage.Database
 	fileStorage string
 }
+
+*/
 
 func main() {
 
@@ -59,13 +63,13 @@ func main() {
 	}
 	defer db.Close()
 
-	app := &application{
-		errorLog:    errorLog,
-		infoLog:     infoLog,
-		baseURL:     *BaseURL,
-		storage:     storage.NewStorage(),
-		database:    &storage.Database{DB: db},
-		fileStorage: *FileStorage,
+	app := &handlers.Application{
+		ErrorLog:    errorLog,
+		InfoLog:     infoLog,
+		BaseURL:     *BaseURL,
+		Storage:     storage.NewStorage(),
+		Database:    &storage.Database{DB: db},
+		FileStorage: *FileStorage,
 	}
 
 	//	Приоритетность в использовании ресурсов сохранения информации URL (по убыванию приоритета):
@@ -74,20 +78,20 @@ func main() {
 	//	3.	Если не заданы ни БД, ни файловое хранилище, то работаем только с оперативной памятью - структура storage.Storage
 
 	//	проверяем доступность базы данных
-	if err := app.database.DB.Ping(); err == nil {
+	if err := app.Database.DB.Ping(); err == nil {
 		//	если база данных доступна, то работаем только с ней
-		app.database.Create() //	создаем структуры хранения данных в БД
-		app.storage = nil
-		app.fileStorage = ""
+		app.Database.Create() //	создаем структуры хранения данных в БД
+		app.Storage = nil
+		app.FileStorage = ""
 		infoLog.Println("DataBase connection has established: " + *DatabaseDSN)
 		infoLog.Println("Server works only with DB, without file storages or RAM structures")
 	} else {
-		app.database = nil
+		app.Database = nil
 		infoLog.Println("DataBase wasn't set")
 		//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
-		if app.fileStorage != "" {
-			infoLog.Printf("File storage with saved URL was found: %s", app.fileStorage)
-			storage.InitialURLFulfilment(app.storage, app.fileStorage)
+		if app.FileStorage != "" {
+			infoLog.Printf("File storage with saved URL was found: %s", app.FileStorage)
+			storage.InitialURLFulfilment(app.Storage, app.FileStorage)
 			infoLog.Println("Saved URLs were loaded in RAM")
 			infoLog.Println("All new URLs will be saved in file storage")
 		} else {

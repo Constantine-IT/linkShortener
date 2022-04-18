@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"github.com/go-chi/chi/v5"
@@ -6,7 +6,7 @@ import (
 )
 
 //	GetShortURLHandler - обработчик GET на адрес короткого URL, возращает начальный URL по его короткой версии
-func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	var flg = true
 	var longURL = ""
 
@@ -15,23 +15,23 @@ func (app *application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	//	проверяем указан ли HASH в коротком URL
 	if hash == "" {
 		http.Error(w, "ShortURL param is missed", http.StatusBadRequest)
-		app.errorLog.Println("ShortURL param is missed")
+		app.ErrorLog.Println("ShortURL param is missed")
 		return
 	}
 
 	// Находим в базе URL соответствующий запрошенному HASH
 
 	// вызов метода для нахождения в структуре хранения связки HASH<==>URL+UserID
-	if app.storage != nil {
-		longURL, _, flg = app.storage.Get(hash)
+	if app.Storage != nil {
+		longURL, _, flg = app.Storage.Get(hash)
 	}
-	if app.database != nil {
-		longURL, _, flg = app.database.Get(hash)
+	if app.Database != nil {
+		longURL, _, flg = app.Database.Get(hash)
 	}
 
 	if !flg {
 		http.Error(w, "There is no such URL in our base!", http.StatusNotFound)
-		app.errorLog.Println("There is no such URL in our base!")
+		app.ErrorLog.Println("There is no such URL in our base!")
 		return
 	}
 

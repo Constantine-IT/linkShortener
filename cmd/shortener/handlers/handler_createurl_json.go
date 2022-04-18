@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -8,20 +8,20 @@ import (
 )
 
 //	CreateShortURLJSONHandler - обработчик POST с URL в виде JSON
-func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
+func (app *Application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	//	считываем UserID из cookie запроса
 	requestUserID, err := r.Cookie("userid")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.errorLog.Println("There is no userid in request cookie:" + err.Error())
+		app.ErrorLog.Println("There is no userid in request cookie:" + err.Error())
 		return
 	}
 	jsonURL, err := io.ReadAll(r.Body) // считываем JSON из тела запроса
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println("JSON body read error:" + err.Error())
+		app.ErrorLog.Println("JSON body read error:" + err.Error())
 		return
 	}
 
@@ -37,14 +37,14 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println("JSON body parsing error:" + err.Error())
+		app.ErrorLog.Println("JSON body parsing error:" + err.Error())
 		return
 	}
 
 	//	проверяем URL на допустимый синтаксис
 	if _, err := url.ParseRequestURI(jsonBody.URL); err != nil {
 		http.Error(w, "Error with URL parsing", http.StatusBadRequest)
-		app.errorLog.Println("Error with URL parsing" + err.Error())
+		app.ErrorLog.Println("Error with URL parsing" + err.Error())
 		return
 	}
 
@@ -52,7 +52,7 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	shortURL, err := app.saveURLtoDB(jsonBody.URL, requestUserID.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.errorLog.Println("URL save error:" + err.Error())
+		app.ErrorLog.Println("URL save error:" + err.Error())
 		return
 	}
 
@@ -68,7 +68,7 @@ func (app *application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 	shortJSONURL, err := json.Marshal(resultURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		app.errorLog.Println(err.Error())
+		app.ErrorLog.Println(err.Error())
 		return
 	}
 

@@ -1,14 +1,14 @@
-package main
+package handlers
 
 import "net/http"
 
 //	PingDataBaseHandler - обработчик проверки доступности базы данных через GET /ping
-func (app *application) PingDataBaseHandler(w http.ResponseWriter, r *http.Request) {
-	if app.database == nil {
+func (app *Application) PingDataBaseHandler(w http.ResponseWriter, r *http.Request) {
+	if app.Database == nil {
 		http.Error(w, "DataBase environment variable wasn't set", http.StatusInternalServerError)
 		return
 	}
-	err := app.database.DB.Ping()
+	err := app.Database.DB.Ping()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {

@@ -1,11 +1,22 @@
-package main
+package handlers
 
 import (
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"log"
 )
 
-func (app *application) Routes() chi.Router {
+type Application struct {
+	ErrorLog    *log.Logger
+	InfoLog     *log.Logger
+	BaseURL     string
+	Storage     *storage.Storage
+	Database    *storage.Database
+	FileStorage string
+}
+
+func (app *Application) Routes() chi.Router {
 
 	// определяем роутер chi
 	r := chi.NewRouter()
