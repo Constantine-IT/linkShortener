@@ -76,7 +76,7 @@ func main() {
 	//	проверяем доступность базы данных
 	if err := app.database.DB.Ping(); err == nil {
 		//	если база данных доступна, то работаем только с ней
-		app.database.Create()
+		app.database.Create() //	создаем структуры хранения данных в БД
 		app.storage = nil
 		app.fileStorage = ""
 		infoLog.Println("DataBase connection has established: " + *DatabaseDSN)

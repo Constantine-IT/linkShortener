@@ -35,7 +35,7 @@ func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
 		log.Println("SELECT by hash failed" + err.Error())
 		return "", "", false
 	}
-
+	log.Println("SELECT by hash was successful")
 	return url, user, true
 }
 
@@ -46,6 +46,7 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 	stmt := `select "hash", "longurl" from "shorten_urls" where "userid" = $1`
 	rows, err := d.DB.Query(stmt, userID)
 	if err != nil || rows.Err() != nil {
+		log.Println("SELECT by UserID failed")
 		return nil, false
 	}
 	defer rows.Close()
@@ -54,11 +55,12 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 		var longurl string
 		err := rows.Scan(&hash, &longurl)
 		if err != nil {
+			log.Println("SELECT by UserID failed")
 			return nil, false
 		}
 		hashRows = append(hashRows, HashURLrow{hash, longurl})
 	}
-
+	log.Println("SELECT by UserID was successful")
 	return hashRows, true
 }
 
