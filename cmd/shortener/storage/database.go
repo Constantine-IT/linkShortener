@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 )
 
@@ -10,10 +11,14 @@ type Database struct {
 	DB *sql.DB
 }
 
+//	ошибка связанная с конфликтом записей в базе данных URL, когда пытаемся вставить запись, уже существующую в БД
+var ErrConflictRecord = errors.New("storage-database: URL-record already exist")
+
 // Методы работы с базой данных - хранилищем URL
 
 // Insert - Метод для сохранения связки короткого и длинного URL + UserID.
 func (d *Database) Insert(hash, longURL, userID string) error {
+	//	готовим SQL-statmnet для вставки в базу и запускаем его на исполнение
 	stmt := `insert into "shorten_urls" ("hash", "userid", "longurl") values ($1, $2, $3)`
 	_, err := d.DB.Exec(stmt, hash, userID, longURL)
 	if err != nil {
@@ -27,16 +32,30 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 
 // Get - Метод для нахождения длинного URL по HASH из БД сохраненных URL
 func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
+
 	var url string
 	var user string
+
+	//	готовим SQL-statmnet для выборрки из базы URL и UserID по известному HASH
 	stmt := `select "longurl", "userid" from "shorten_urls" where "hash" = $1`
 	err := d.DB.QueryRow(stmt, hash).Scan(&url, &user)
-	if err != nil {
-		log.Println("SELECT by hash failed" + err.Error())
+	if errors.Is(err, sql.ErrNoRows) {
+		log.Println("SELECT by hash returned no rows" + err.Error())
 		return "", "", false
 	}
 	log.Println("SELECT by hash was successful")
 	return url, user, true
+}
+
+// GetByLongURL - Метод для нахождения HASH по URL из БД сохраненных URL
+func (d *Database) GetByLongURL(longURL string) (string, bool) {
+	var hash string
+	stmt := `select "hash" from "shorten_urls" where "longurl" = $1`
+	err := d.DB.QueryRow(stmt, longURL).Scan(&hash)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false
+	}
+	return hash, true
 }
 
 // GetByUserID - Метод для нахождения списка сохраненных пар <shorten_URL> и <original_URL> по UserID

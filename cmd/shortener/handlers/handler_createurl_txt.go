@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"errors"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 	"io"
 	"net/http"
 	"net/url"
@@ -9,6 +11,11 @@ import (
 //	CreateShortURLHandler - обработчик POST с URL в виде текста
 func (app *Application) CreateShortURLHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	//	в случае успешного создания короткого URL, возвращаем ответ со статусом 201,
+	//	если такой URL уже есть в базе, то возвращаем его со статусом 409 - Conflict
+	//	в переменной responseStatus - будем хранить статус ответа:
+	responseStatus := http.StatusCreated
 
 	//	считываем UserID из cookie запроса
 	requestUserID, err := r.Cookie("userid")
@@ -35,14 +42,18 @@ func (app *Application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 	}
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
 	shortURL, err := app.saveURLtoDB(longURL, requestUserID.Value)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.ErrorLog.Println("Error with saving URL:" + err.Error())
-		return
+	if errors.Is(err, storage.ErrConflictRecord) {
+		responseStatus = http.StatusConflict
+	} else {
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			app.ErrorLog.Println("URL save error:" + err.Error())
+			return
+		}
 	}
 
 	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в виде текста
 	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(responseStatus)
 	w.Write([]byte(shortURL)) //	пишем URL в текстовом виде в тело ответа
 }

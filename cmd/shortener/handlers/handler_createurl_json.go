@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 	"io"
 	"net/http"
 	"net/url"
@@ -10,6 +12,11 @@ import (
 //	CreateShortURLJSONHandler - обработчик POST с URL в виде JSON
 func (app *Application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	//	в случае успешного создания короткого URL, возвращаем ответ со статусом 201,
+	//	если такой URL уже есть в базе, то возвращаем его со статусом 409 - Conflict
+	//	в переменной responseStatus - будем хранить статус ответа:
+	responseStatus := http.StatusCreated
 
 	//	считываем UserID из cookie запроса
 	requestUserID, err := r.Cookie("userid")
@@ -50,10 +57,14 @@ func (app *Application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 
 	//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL + UserID
 	shortURL, err := app.saveURLtoDB(jsonBody.URL, requestUserID.Value)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.ErrorLog.Println("URL save error:" + err.Error())
-		return
+	if errors.Is(err, storage.ErrConflictRecord) {
+		responseStatus = http.StatusConflict
+	} else {
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			app.ErrorLog.Println("URL save error:" + err.Error())
+			return
+		}
 	}
 
 	//	описываем структуру создаваемого JSON вида {"result":"<shorten_url>"}
@@ -74,6 +85,6 @@ func (app *Application) CreateShortURLJSONHandler(w http.ResponseWriter, r *http
 
 	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в JSON виде
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(responseStatus)
 	w.Write(shortJSONURL) //	пишем JSON с URL в тело ответа
 }

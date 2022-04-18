@@ -13,18 +13,6 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
-/*
-type application struct {
-	errorLog    *log.Logger
-	infoLog     *log.Logger
-	baseURL     string
-	storage     *storage.Storage
-	database    *storage.Database
-	fileStorage string
-}
-
-*/
-
 func main() {
 
 	//	Приоритеты настроек:
@@ -63,6 +51,8 @@ func main() {
 	}
 	defer db.Close()
 
+	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
+	//	информационных сообщений; базового адреса нашего сервера и используемых типов хранилищ данных
 	app := &handlers.Application{
 		ErrorLog:    errorLog,
 		InfoLog:     infoLog,
@@ -84,7 +74,7 @@ func main() {
 		app.Storage = nil
 		app.FileStorage = ""
 		infoLog.Println("DataBase connection has established: " + *DatabaseDSN)
-		infoLog.Println("Server works only with DB, without file storages or RAM structures")
+		infoLog.Println("Server works only with DB, without file or RAM storage")
 	} else {
 		app.Database = nil
 		infoLog.Println("DataBase wasn't set")
@@ -98,7 +88,7 @@ func main() {
 			//	если файловое хранилище не задано, то работаем только в оперативной памяти
 			infoLog.Println("FileStorage wasn't set")
 		}
-		infoLog.Println("Server works with structures in RAM")
+		infoLog.Println("Server works with RAM storage")
 	}
 
 	//	запуск сервера
