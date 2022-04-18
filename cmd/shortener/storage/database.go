@@ -18,38 +18,35 @@ var ErrConflictRecord = errors.New("storage-database: URL-record already exist")
 
 // Insert - Метод для сохранения связки короткого и длинного URL + UserID.
 func (d *Database) Insert(hash, longURL, userID string) error {
-	//	готовим SQL-statmnet для вставки в базу и запускаем его на исполнение
+	//	готовим SQL-statement для вставки в базу и запускаем его на исполнение
 	stmt := `insert into "shorten_urls" ("hash", "userid", "longurl") values ($1, $2, $3)`
 	_, err := d.DB.Exec(stmt, hash, userID, longURL)
 	if err != nil {
-		log.Println("INSERT failed")
+		log.Println("New URL INSERT - FAILED")
 		return err
 	} else {
-		log.Println("INSERT was successful")
+		log.Println("New URL INSERT - SUCCESS")
 		return nil
 	}
 }
 
 // Get - Метод для нахождения длинного URL по HASH из БД сохраненных URL
 func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
-
 	var url string
 	var user string
 
-	//	готовим SQL-statmnet для выборрки из базы URL и UserID по известному HASH
 	stmt := `select "longurl", "userid" from "shorten_urls" where "hash" = $1`
 	err := d.DB.QueryRow(stmt, hash).Scan(&url, &user)
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Println("SELECT by hash returned no rows" + err.Error())
 		return "", "", false
 	}
-	log.Println("SELECT by hash was successful")
 	return url, user, true
 }
 
 // GetByLongURL - Метод для нахождения HASH по URL из БД сохраненных URL
 func (d *Database) GetByLongURL(longURL string) (string, bool) {
 	var hash string
+
 	stmt := `select "hash" from "shorten_urls" where "longurl" = $1`
 	err := d.DB.QueryRow(stmt, longURL).Scan(&hash)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -74,12 +71,12 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 		var longurl string
 		err := rows.Scan(&hash, &longurl)
 		if err != nil {
-			log.Println("SELECT by UserID failed")
+			log.Println("SELECT by UserID - FAILED")
 			return nil, false
 		}
 		hashRows = append(hashRows, HashURLrow{hash, longurl})
 	}
-	log.Println("SELECT by UserID was successful")
+	log.Println("SELECT by UserID - SUCCESS")
 	return hashRows, true
 }
 
@@ -88,7 +85,7 @@ func (d *Database) Create() error {
 
 	_, err := d.DB.Exec(`create table "shorten_urls" (
     "hash" text constraint hash_pk primary key not null,
-    "userid" text not null,
+    "userid" text constraint unique not null,
     "longurl" text not null)`)
 	log.Println("table shorten_urls created")
 	if err != nil {
@@ -96,6 +93,3 @@ func (d *Database) Create() error {
 	}
 	return nil
 }
-
-//	Добавление индекса для созданного столбца
-//CREATE INDEX idx_snippets_created ON userid(created), longurl(created);

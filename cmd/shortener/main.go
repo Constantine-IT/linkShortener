@@ -44,7 +44,7 @@ func main() {
 		*FileStorage = u
 	}
 
-	//	открываем connect с базой данных PostgreSQL по указанному DATABASE_DSN
+	//	открываем connect с базой данных PostgreSQL 10+ по указанному DATABASE_DSN
 	db, err := sql.Open("pgx", *DatabaseDSN)
 	if err != nil {
 		errorLog.Println(err.Error())
@@ -52,7 +52,7 @@ func main() {
 	defer db.Close()
 
 	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
-	//	информационных сообщений; базового адреса нашего сервера и используемых типов хранилищ данных
+	//	информационных сообщений; базового адреса нашего сервера и используемых хранилищ для URL
 	app := &handlers.Application{
 		ErrorLog:    errorLog,
 		InfoLog:     infoLog,

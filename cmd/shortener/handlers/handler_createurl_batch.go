@@ -27,13 +27,19 @@ func (app *Application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	//	описываем структуру JSON в запросе
+	//	описываем структуру JSON в запросе -  {
+	//        "correlation_id": "<строковый идентификатор>",
+	//        "original_url": "<URL для сокращения>"
+	//    }
 	type incomingList struct {
 		CorrelationID string `json:"correlation_id"`
 		OriginalURL   string `json:"original_url"`
 	}
 
-	//	описываем структуру JSON в ответе
+	//	описываем структуру JSON в ответе -  {
+	//        "correlation_id": "<строковый идентификатор из объекта запроса>",
+	//        "short_url": "<результирующий сокращённый URL>"
+	//    }
 	type outgoingList struct {
 		CorrelationID string `json:"correlation_id"`
 		ShortURL      string `json:"short_url"`
