@@ -32,7 +32,7 @@ func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
 	stmt := `select "longurl", "userid" from "shorten_urls" where "hash" = $1`
 	err := d.DB.QueryRow(stmt, hash).Scan(url, user)
 	if err != nil {
-		log.Println("SELECT by hash failed")
+		log.Println("SELECT by hash failed" + err.Error())
 		return "", "", false
 	}
 
