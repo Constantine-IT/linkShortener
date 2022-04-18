@@ -17,14 +17,9 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 	_, err := d.DB.Exec(stmt, hash, userID, longURL)
 	if err != nil {
 		return err
+	} else {
+		return nil
 	}
-	/*
-		hash = ""
-		longURL = ""
-		userID = ""
-
-	*/
-	return nil
 }
 
 // Get - Метод для нахождения длинного URL по HASH из БД сохраненных URL
@@ -49,6 +44,7 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 	if err != nil || rows.Err() != nil {
 		return nil, false
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var hash string
 		var longurl string

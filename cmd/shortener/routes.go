@@ -28,12 +28,14 @@ func (app *application) Routes() chi.Router {
 	//	Эндпоинт GET /ping проверяет доступность базы данных, выдает ответ с кодом 200, если доступна, и 500 - если не доступна.
 	//	Эндпоинт POST / принимает в теле запроса в виде текста строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 	//	Эндпоинт POST /api/shorten - аналогичен предыдущему, но принимает в теле запроса JSON-объект {"url":"<some_url>"} и возвращает в теле ответа JSON-объект {"result":"<shorten_url>"}.
+	//	Эндпоинт POST /api/shorten/batch, принимает в теле запроса множество URL для сокращения в формате JSON и возвращает сокращенные URL в JSON формате
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/api/user/urls", app.GetURLByUserIDHandler)
 		r.Get("/{hashURL}", app.GetShortURLHandler)
 		r.Get("/ping", app.PingDataBaseHandler)
 		r.Get("/", app.GetShortURLHandler)
+		r.Post("/api/shorten/batch", app.CreateShortURLBatchHandler)
 		r.Post("/api/shorten", app.CreateShortURLJSONHandler)
 		r.Post("/", app.CreateShortURLHandler)
 	})
