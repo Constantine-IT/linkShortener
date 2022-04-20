@@ -88,7 +88,6 @@ func (d *Database) Create() error {
     "longurl" text constraint unique_longurl unique not null,
     "userid" text not null)`)
 	if err != nil {
-		log.Println("DATABASE creation - FAILED")
 		return err
 	}
 	log.Println("DATABASE creation - SUCCESS")

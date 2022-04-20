@@ -72,10 +72,13 @@ func main() {
 	//	проверяем доступность базы данных
 	if err := app.Database.DB.Ping(); err == nil {
 		//	если база данных доступна, то работаем только с ней
-		app.Database.Create() //	создаем структуры хранения данных в БД
+		err := app.Database.Create() //	создаем структуры хранения данных в БД
+		if err != nil {
+			log.Println("DATABASE creation - FAILED" + err.Error())
+		}
 		app.Storage = nil
 		app.FileStorage = ""
-		infoLog.Println("DataBase connection has established: " + *DatabaseDSN)
+		infoLog.Println("DataBase connection has been established: " + *DatabaseDSN)
 		infoLog.Println("Server works only with DB, without file or RAM storage")
 	} else {
 		app.Database = nil
