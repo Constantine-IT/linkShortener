@@ -24,10 +24,10 @@ func (app *Application) Routes() chi.Router {
 	// зададим middleware для поддержки компрессии тел запросов и ответов
 	r.Use(middleware.Compress(1, `text/plain`, `application/json`))
 	r.Use(middleware.AllowContentEncoding(`gzip`))
-	r.Use(DecompressGZIP)
+	r.Use(app.DecompressGZIP)
 	//	добавим функциональность аутентификации пользователя через симметрично подписанную куку,
 	//	содержащую уникальный идентификатор пользователя
-	r.Use(AuthCookie)
+	r.Use(app.AuthCookie)
 	// зададим встроенные middleware, чтобы улучшить стабильность приложения
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)

@@ -4,7 +4,6 @@ import (
 	"crypto/aes"
 	"crypto/rand"
 	"encoding/hex"
-	"log"
 	"net/http"
 	"time"
 )
@@ -13,7 +12,7 @@ import (
 //	- если такая cookie там есть, проверяем её на подлинность,
 //	- если такой cookie нет, или она не проходит проверку подлинности, то генерируем новый userid,
 //	шифруем его с помощью симметричного алгоритма AES и вставляем в Response.
-func AuthCookie(next http.Handler) http.Handler {
+func (app *Application) AuthCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//	секретный ключ симметричного шифрования. Длина ключа - 16 байт.
 		secretKey := []byte("sbHYDYWgdakkHHDS")
@@ -23,7 +22,7 @@ func AuthCookie(next http.Handler) http.Handler {
 		// инициализируем интерфейс симметричного шифрования - cipher.Block
 		aesblock, err := aes.NewCipher(secretKey)
 		if err != nil {
-			log.Printf("Creating cipher.Block error: %v\n", err)
+			app.ErrorLog.Printf("Creating cipher.Block error: %v\n", err)
 			return
 		}
 
@@ -33,7 +32,7 @@ func AuthCookie(next http.Handler) http.Handler {
 			// декодируем userid в тип []byte
 			requestUserIDByte, err := hex.DecodeString(requestUserID.Value)
 			if err != nil {
-				log.Printf("error with decoding of request Auth Cookie to []byte: %v\n", err)
+				app.ErrorLog.Printf("error with decoding of request Auth Cookie to []byte: %v\n", err)
 			}
 			// расшифровываем "userid" в переменную authCookie, используя созданный ранее cipher.Block AES
 			authCookie := make([]byte, aes.BlockSize)
@@ -49,7 +48,7 @@ func AuthCookie(next http.Handler) http.Handler {
 		//	если cookie "userid" отсутствует, или не прошло проверку подлинности, то генерируем новый User ID длиной 10 байт,
 		userID, err := generateRandom(10)
 		if err != nil {
-			log.Printf("UserId generation error: %v\n", err)
+			app.ErrorLog.Printf("UserId generation error: %v\n", err)
 			return
 		}
 		//	добавляем к нему проверочную фразу - nonce (длиной 6 байт), получаем slice из 16 байт - размер блока для AES.
