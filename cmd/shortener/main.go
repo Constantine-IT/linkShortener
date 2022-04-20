@@ -74,7 +74,7 @@ func main() {
 		//	если база данных доступна, то работаем только с ней
 		err := app.Database.Create() //	создаем структуры хранения данных в БД
 		if err != nil {
-			log.Println("DATABASE creation - FAILED" + err.Error())
+			log.Println("DATABASE creation - " + err.Error())
 		}
 		app.Storage = nil
 		app.FileStorage = ""

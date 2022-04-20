@@ -83,7 +83,7 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 //	Create - метод создания структур хранения в базе данных URL
 func (d *Database) Create() error {
 	//	Создание таблицы shorten_urls
-	_, err := d.DB.Exec(`create table "shorten_urls" (
+	_, err := d.DB.Exec(`create table if not exists "shorten_urls" (
     "hash" text constraint hash_pk primary key not null,
     "longurl" text constraint unique_longurl unique not null,
     "userid" text not null)`)
