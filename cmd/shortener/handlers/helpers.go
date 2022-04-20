@@ -28,6 +28,12 @@ func (app *Application) saveURLtoDB(longURL, userID string) (string, error) {
 		}
 		//	если такой записи в нашей БД нет, то добавляем её в нашу базу
 		err = app.Database.Insert(hash, longURL, userID)
+		if err != nil {
+			app.ErrorLog.Println("New URL INSERT - FAILED: " + err.Error())
+			return "", err
+		} else {
+			app.InfoLog.Println("New URL INSERT - SUCCESS - " + longURL)
+		}
 	}
 
 	//	если база данных не задействуется, то работаем со структурами в RAM и файлом-хранилищем
@@ -37,6 +43,7 @@ func (app *Application) saveURLtoDB(longURL, userID string) (string, error) {
 	if err == nil {
 		// Изготавливаем  <shorten_URL> из базового адреса нашего сервера и HASH
 		shortURL := strings.Join([]string{app.BaseURL, hash}, "/")
+		app.InfoLog.Println("New SHORT UDL was created - " + shortURL)
 		return shortURL, nil
 	} else {
 		return "", err
