@@ -71,7 +71,7 @@ func TestResponseWithErrors(t *testing.T) {
 			want: want{
 				statusCode:  http.StatusNotFound,
 				contentType: "text/plain; charset=utf-8",
-				body:        "There is no such URL in our base!\n",
+				body:        "There is no such URL in our database!\n",
 			},
 		},
 		{
