@@ -3,7 +3,6 @@ package storage
 import (
 	"database/sql"
 	"errors"
-	"log"
 )
 
 //	Database - оределяет тип, который обертывает пул подключения sql.DB
@@ -61,7 +60,6 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 	stmt := `select "hash", "longurl" from "shorten_urls" where "userid" = $1`
 	rows, err := d.DB.Query(stmt, userID)
 	if err != nil || rows.Err() != nil {
-		log.Println("SELECT by UserID - FAILED")
 		return nil, false
 	}
 	defer rows.Close()
@@ -69,12 +67,10 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 	for rows.Next() {
 		err := rows.Scan(&hash, &longurl)
 		if err != nil {
-			log.Println("SELECT by UserID - FAILED")
 			return nil, false
 		}
 		hashRows = append(hashRows, HashURLrow{hash, longurl})
 	}
-	log.Println("SELECT by UserID - SUCCESS")
 	return hashRows, true
 }
 

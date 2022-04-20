@@ -32,7 +32,7 @@ func (app *Application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Req
 
 	if !flg {
 		http.Error(w, "There is no URL from this user in database", http.StatusNoContent)
-		app.ErrorLog.Println("There is no URL from this user in our database")
+		app.InfoLog.Println("There is no URL from this user in our database")
 		return
 	}
 

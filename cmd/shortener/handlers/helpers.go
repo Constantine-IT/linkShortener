@@ -43,7 +43,7 @@ func (app *Application) saveURLtoDB(longURL, userID string) (string, error) {
 	if err == nil {
 		// Изготавливаем  <shorten_URL> из базового адреса нашего сервера и HASH
 		shortURL := strings.Join([]string{app.BaseURL, hash}, "/")
-		app.InfoLog.Println("New SHORT UDL was created - " + shortURL)
+		app.InfoLog.Println("New SHORT URL was created - " + shortURL)
 		return shortURL, nil
 	} else {
 		return "", err

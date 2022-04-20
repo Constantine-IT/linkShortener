@@ -20,7 +20,7 @@ import (
 //	receive URL_for_shorting in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside BODY,
 //	receive <shorten_URL> from client with GET method and response to it with initial URL in the field "location" in header
 
-func TestShortURLJSONHandler(t *testing.T) {
+func TestIntegrationWithJSONbody(t *testing.T) {
 
 	type want struct {
 		inBetweenStatusCode  int
@@ -95,7 +95,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 	}
 }
 
-func TestShortURLHandler(t *testing.T) {
+func TestIntegrationWithTXTbody(t *testing.T) {
 
 	type want struct {
 		inBetweenStatusCode  int
