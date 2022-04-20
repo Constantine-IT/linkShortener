@@ -8,12 +8,10 @@ import (
 )
 
 type Application struct {
-	ErrorLog    *log.Logger
-	InfoLog     *log.Logger
-	BaseURL     string
-	Storage     *storage.Storage
-	Database    *storage.Database
-	FileStorage string
+	ErrorLog   *log.Logger
+	InfoLog    *log.Logger
+	BaseURL    string
+	Datasource storage.Datasource
 }
 
 func (app *Application) Routes() chi.Router {

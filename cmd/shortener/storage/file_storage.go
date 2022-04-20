@@ -11,12 +11,8 @@ import (
 
 //	Структуры и методы работы с файловым хранилищем URL
 
-//	структура записи для сохраниния связки HASH<==>URL + UserID
-type shortenURL struct {
-	HashURL string `json:"hash-url"`
-	LongURL string `json:"long-url"`
-	UserID  string `json:"user-id"`
-}
+//	FileStorage - путь к файлу-хранилищу URL
+var FileStorage string
 
 //	структура файлового дескриптора для записи
 type writer struct {
@@ -87,17 +83,18 @@ func (c *reader) close() error {
 }
 
 //	Метод первичного заполнения хранилища URL из файла сохраненных URL, при старте сервера
-func InitialURLFulfilment(storage *Storage, file string) {
+func InitialURLFulfilment(s *Storage) {
+
 	//	создаем экземпляр reader для файла-хранилища HASH<==>URL
-	fileReader, err := newReader(file)
+	fileReader, err := newReader(FileStorage)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer fileReader.close()
 
 	//	блокируем хранилище URL в оперативной памяти на время заливки данных
-	storage.mutex.Lock()
-	defer storage.mutex.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
 	for {
 		//	считываем записи по одной из файла-хранилища HASH + <original_URL> + UserID
@@ -110,6 +107,6 @@ func InitialURLFulfilment(storage *Storage, file string) {
 			log.Fatal(err)
 		}
 		//	добавляем связку HASH и (<original_URL> + UserID) в хранилище
-		storage.data[readURL.HashURL] = rowStorage{readURL.LongURL, readURL.UserID}
+		s.Data[readURL.HashURL] = RowStorage{readURL.LongURL, readURL.UserID}
 	}
 }

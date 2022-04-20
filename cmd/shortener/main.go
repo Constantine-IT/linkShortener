@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	//	github.com/jackc/pgx/stdlib - драйвер PostgreSQL для доступа к БД с использованием пакета database/sql
 	//	если хотим работать с БД напрямую, без database/sql надо использовать пакет - github.com/jackc/pgx/v4
 	_ "github.com/jackc/pgx/stdlib"
@@ -46,22 +45,12 @@ func main() {
 		*FileStorage = u
 	}
 
-	//	открываем connect с базой данных PostgreSQL 10+ по указанному DATABASE_DSN
-	db, err := sql.Open("pgx", *DatabaseDSN)
-	if err != nil {
-		errorLog.Println(err.Error())
-	}
-	defer db.Close()
-
 	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
 	//	информационных сообщений; базового адреса нашего сервера и используемых хранилищ для URL
 	app := &handlers.Application{
-		ErrorLog:    errorLog,
-		InfoLog:     infoLog,
-		BaseURL:     *BaseURL,
-		Storage:     storage.NewStorage(),
-		Database:    &storage.Database{DB: db},
-		FileStorage: *FileStorage,
+		ErrorLog: errorLog,
+		InfoLog:  infoLog,
+		BaseURL:  *BaseURL,
 	}
 
 	//	Приоритетность в использовании ресурсов сохранения информации URL (по убыванию приоритета):
@@ -69,39 +58,53 @@ func main() {
 	//	2.	Если БД не задана, то используем файловое хранилище (задаваемое через FILE_STORAGE_PATH) и оперативную память
 	//	3.	Если не заданы ни БД, ни файловое хранилище, то работаем только с оперативной памятью - структура storage.Storage
 
-	//	проверяем доступность базы данных
-	if err := app.Database.DB.Ping(); err == nil {
-		//	если база данных доступна, то работаем только с ней
-		err := app.Database.Create() //	создаем структуры хранения данных в БД
+	if *DatabaseDSN != "" { //	если база данных доступна, то работаем только с ней
+		//	открываем connect с базой данных PostgreSQL 10+ по указанному DATABASE_DSN
+		db, err := sql.Open("pgx", *DatabaseDSN)
 		if err != nil {
-			app.ErrorLog.Println("DATABASE creation - " + err.Error())
+			app.ErrorLog.Println(err.Error())
+		}
+		defer db.Close()
+		if err := db.Ping(); err == nil {
+			//	Создание таблицы shorten_urls, если её не существует
+			_, err := db.Exec(`create table if not exists "shorten_urls" (
+    "hash" text constraint hash_pk primary key not null,
+    "longurl" text constraint unique_longurl unique not null,
+    "userid" text not null)`)
+			if err != nil {
+				app.ErrorLog.Println("DATABASE structure creation - " + err.Error())
+			}
+		} else {
+			app.ErrorLog.Println("DATABASE open - " + err.Error())
+			os.Exit(1)
 		}
 		app.InfoLog.Println("DATABASE creation - SUCCESS")
-		app.Storage = nil
-		app.FileStorage = ""
-		infoLog.Println("DataBase connection has been established: " + *DatabaseDSN)
-		infoLog.Println("Server works only with DB, without file or RAM storage")
+		app.Datasource = &storage.Database{DB: db}
+		app.InfoLog.Println("DataBase connection has been established: " + *DatabaseDSN)
+		app.InfoLog.Println("Server works only with DB, without file or RAM storage")
 	} else {
-		app.Database = nil
-		infoLog.Println("DataBase wasn't set")
+		app.InfoLog.Println("DataBase wasn't set")
+		s := storage.Storage{Data: make(map[string]storage.RowStorage)}
+		app.Datasource = &s
 		//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
-		if app.FileStorage != "" {
-			infoLog.Printf("File storage with saved URL was found: %s", app.FileStorage)
-			storage.InitialURLFulfilment(app.Storage, app.FileStorage)
-			infoLog.Println("Saved URLs were loaded in RAM\nAll new URLs will be saved in the file storage")
+		if *FileStorage != "" {
+			app.InfoLog.Printf("File storage with saved URL was found: %s", *FileStorage)
+			storage.FileStorage = *FileStorage
+			storage.InitialURLFulfilment(&s)
+			app.InfoLog.Println("Saved URLs were loaded in RAM")
 		} else {
 			//	если файловое хранилище не задано, то работаем только в оперативной памяти
-			infoLog.Println("FileStorage wasn't set")
+			app.InfoLog.Println("FileStorage wasn't set")
 		}
-		infoLog.Println("Server works with RAM storage")
+		app.InfoLog.Println("Server works with RAM storage")
 	}
 
 	//	запуск сервера
-	infoLog.Printf("Server started at address: %s", *ServerAddress)
+	app.InfoLog.Printf("Server started at address: %s", *ServerAddress)
 	srv := &http.Server{
 		Addr:     *ServerAddress,
 		ErrorLog: errorLog,
 		Handler:  app.Routes(),
 	}
-	errorLog.Fatal(srv.ListenAndServe())
+	app.ErrorLog.Fatal(srv.ListenAndServe())
 }

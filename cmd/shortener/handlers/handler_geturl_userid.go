@@ -23,13 +23,7 @@ func (app *Application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Req
 
 	// Находим в базе URLs принадлежащие пользователю с данным UserID
 	// вызов метода для нахождения в структуре хранения всех пар HASH<==>URL связанных с указанным UserID
-	if app.Storage != nil {
-		slicedURL, flg = app.Storage.GetByUserID(requestUserID.Value)
-	}
-	if app.Database != nil {
-		slicedURL, flg = app.Database.GetByUserID(requestUserID.Value)
-	}
-
+	slicedURL, flg = app.Datasource.GetByUserID(requestUserID.Value)
 	if !flg {
 		http.Error(w, "There is no URL from this user in database", http.StatusNoContent)
 		app.InfoLog.Println("There is no URL from this user in our database")

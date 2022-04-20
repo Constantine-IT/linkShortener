@@ -20,13 +20,8 @@ func (app *Application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Находим в базе <original_URL> соответствующий запрошенному HASH
-	if app.Storage != nil {
-		longURL, _, flg = app.Storage.Get(hash)
-	}
-	if app.Database != nil {
-		longURL, _, flg = app.Database.Get(hash)
-	}
-
+	longURL, _, flg = app.Datasource.Get(hash)
+	
 	if !flg {
 		http.Error(w, "There is no such URL in our database!", http.StatusNotFound)
 		app.ErrorLog.Println("There is no such URL in our database!")

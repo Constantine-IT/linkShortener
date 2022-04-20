@@ -35,12 +35,12 @@ func TestInsert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			storage := NewStorage()
-			err := storage.Insert(tt.shortURL, tt.longURL, "ccc387d791a5776279cdd9d585f160fd", "")
+			s := Storage{Data: make(map[string]RowStorage)}
+			err := s.Insert(tt.shortURL, tt.longURL, "ccc387d791a5776279cdd9d585f160fd")
 			if err != nil {
 				t.Errorf("Error in INSERT method: %s", err.Error())
 			}
-			gotLongURL, _, gotFlag := storage.Get(tt.want.shortURL)
+			gotLongURL, _, gotFlag := s.Get(tt.want.shortURL)
 
 			if (gotFlag == true) && (gotLongURL != tt.want.longURL) {
 				t.Errorf("GET return longURL = %v, but want %v", gotLongURL, tt.want.longURL)

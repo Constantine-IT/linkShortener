@@ -1,36 +1,20 @@
 package storage
 
 import (
-	"errors"
 	"sync"
 )
 
-//	ErrEmptyNotAllowed - ошибка возникающая при попытке вставить пустое значение в любое поле структуры хранения URL в оперативной памяти
-var ErrEmptyNotAllowed = errors.New("ram-storage: empty value is not allowed")
-
-//	rowStorage - структура записи в хранилище URL в оперативной памяти
-type rowStorage struct {
-	longURL string
-	userID  string
-}
-
-//	Storage - структура хранилища URL
+//	Storage - структура хранилища URL для работы в оперативной памяти
 type Storage struct {
-	data  map[string]rowStorage
+	Data  map[string]RowStorage
 	mutex sync.Mutex
 }
 
-//	Констуктор хранилища URL в оперативной памяти
-func NewStorage() *Storage {
-	return &Storage{data: make(map[string]rowStorage)}
-}
-
-// Методы работы с хранилищем URL
-
 // Insert - Метод для сохранения связки HASH и (<original_URL> + UserID)
-func (s *Storage) Insert(shortURL, longURL, userID, filePath string) error {
+func (s *Storage) Insert(hash, longURL, userID string) error {
+
 	//	пустые значения URL или UserID к вставке в хранилище не допускаются
-	if shortURL == "" || longURL == "" || userID == "" {
+	if hash == "" || longURL == "" || userID == "" {
 		return ErrEmptyNotAllowed
 	}
 
@@ -40,17 +24,17 @@ func (s *Storage) Insert(shortURL, longURL, userID, filePath string) error {
 
 	//	сохраняем URL в оперативной памяти в структуре Storage
 	//	каждая запись - это сопоставленная с HASH структура из (URL + UserID) - rowStorage
-	s.data[shortURL] = rowStorage{longURL, userID}
+	s.Data[hash] = RowStorage{longURL, userID}
 	//	если файл для хранения URL не задан, то храним список только в оперативной памяти
-	if filePath != "" {
+	if FileStorage != "" {
 		//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
 		shortenURL := shortenURL{
-			HashURL: shortURL,
+			HashURL: hash,
 			LongURL: longURL,
 			UserID:  userID,
 		}
 		//	создаем экземпляр writer для файла-хранилища
-		writtenURL, err := newWriter(filePath)
+		writtenURL, err := newWriter(FileStorage)
 		if err != nil {
 			return err
 		}
@@ -63,23 +47,33 @@ func (s *Storage) Insert(shortURL, longURL, userID, filePath string) error {
 	return nil
 }
 
-// Get - Метод для нахождения <original_URL> по HASH
-func (s *Storage) Get(hash string) (longURL string, userID string, flag bool) {
+// Get - Метод для нахождения <original_URL> и UserID по HASH
+func (s *Storage) Get(hash string) (longURL string, userID string, flg bool) {
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	//	если записи с запрашиваемым HASH нет в базе, то выставялем FLAG в положение FALSE
-	if _, ok := s.data[hash]; !ok {
+	if _, ok := s.Data[hash]; !ok {
 		return "", "", false
 	}
-	return s.data[hash].longURL, s.data[hash].userID, true
+	return s.Data[hash].longURL, s.Data[hash].userID, true
 }
 
-//	Структура записи связки HASH и <original_URL> для выдачи по запросу всех строк с одинаковым UserID
-type HashURLrow struct {
-	Hash    string `json:"short_url"`
-	LongURL string `json:"original_url"`
+// GetByLongURL - Метод для нахождения HASH по <original_URL>
+func (s *Storage) GetByLongURL(longURL string) (hash string, flg bool) {
+
+	// блокируем хранилище URL на время считывания информации
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	//	если записи с запрашиваемым URL нет в базе, то выставялем FLAG в положение FALSE
+	for h, row := range s.Data {
+		if row.longURL == longURL {
+			return h, true
+		}
+	}
+	return "", false
 }
 
 // GetByUserID - Метод для нахождения списка сохраненных пар HASH и <original_URL> по UserID
@@ -92,7 +86,7 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 	defer s.mutex.Unlock()
 
 	//	отбираем строки с указанным UserID и добавляем пару HASH и <original_URL> из них в исходящий слайс
-	for hash, row := range s.data {
+	for hash, row := range s.Data {
 		if row.userID == userID {
 			hashRows = append(hashRows, HashURLrow{hash, row.longURL})
 		}

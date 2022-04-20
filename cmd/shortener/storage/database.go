@@ -5,15 +5,10 @@ import (
 	"errors"
 )
 
-//	Database - оределяет тип, который обертывает пул подключения sql.DB
+//	Database - структура хранилища URL, обертывающая пул подключений к базе данных
 type Database struct {
 	DB *sql.DB
 }
-
-//	ErrConflictRecord - ошибка связанная с конфликтом записей в базе данных URL, когда пытаемся вставить запись, уже существующую в БД
-var ErrConflictRecord = errors.New("storage-database: URL-record already exist")
-
-// Методы работы с базой данных - хранилищем URL
 
 // Insert - Метод для сохранения связки HASH и (<original_URL> + UserID)
 func (d *Database) Insert(hash, longURL, userID string) error {
@@ -41,15 +36,14 @@ func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
 }
 
 // GetByLongURL - Метод для нахождения HASH по <original_URL>
-func (d *Database) GetByLongURL(longURL string) (string, bool) {
-	var hash string
-
+func (d *Database) GetByLongURL(longURL string) (hash string, flg bool) {
+	var h string
 	stmt := `select "hash" from "shorten_urls" where "longurl" = $1`
-	err := d.DB.QueryRow(stmt, longURL).Scan(&hash)
+	err := d.DB.QueryRow(stmt, longURL).Scan(&h)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", false
 	}
-	return hash, true
+	return h, true
 }
 
 // GetByUserID - Метод для нахождения списка сохраненных пар HASH и <original_URL> по UserID
@@ -72,17 +66,4 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 		hashRows = append(hashRows, HashURLrow{hash, longurl})
 	}
 	return hashRows, true
-}
-
-//	Create - метод создания структур хранения в базе данных URL
-func (d *Database) Create() error {
-	//	Создание таблицы shorten_urls
-	_, err := d.DB.Exec(`create table if not exists "shorten_urls" (
-    "hash" text constraint hash_pk primary key not null,
-    "longurl" text constraint unique_longurl unique not null,
-    "userid" text not null)`)
-	if err != nil {
-		return err
-	}
-	return nil
 }
