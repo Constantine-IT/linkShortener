@@ -100,7 +100,7 @@ func InitialURLFulfilment(storage *Storage, file string) {
 	defer storage.mutex.Unlock()
 
 	for {
-		//	считываем записи по одной из файла-хранилища HASH<==>URL + UserID
+		//	считываем записи по одной из файла-хранилища HASH + <original_URL> + UserID
 		readURL, err := fileReader.read()
 		//	когда дойдем до конца файла - выходим из цикла чтения
 		if errors.Is(err, io.EOF) {
@@ -109,7 +109,7 @@ func InitialURLFulfilment(storage *Storage, file string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		//	добавляем связку HASH<==>URL + UserID в таблицу в RAM
+		//	добавляем связку HASH и (<original_URL> + UserID) в хранилище
 		storage.data[readURL.HashURL] = rowStorage{readURL.LongURL, readURL.UserID}
 	}
 }

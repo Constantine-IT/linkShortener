@@ -48,10 +48,10 @@ func (app *Application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 	//	создаеём экземпляр структуры для заполнения из JSON запроса
 	incomingURLlist := make([]incomingList, 0)
 
-	//	создаеём экземпляр структуры для JSON ответа
+	//	создаеём экземпляр структуры для создания JSON ответа
 	outgoingURLlist := make([]outgoingList, 0)
 
-	//	парсим JSON из запроса и записываем результат в экземпляр структуры
+	//	парсим JSON из запроса и записываем результат в экземпляр структуры incomingURLlist
 	err = json.Unmarshal(jsonURL, &incomingURLlist)
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
@@ -60,7 +60,7 @@ func (app *Application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	//	прогоняем цикл по всем срокам входящего JSON списка URL
+	//	прогоняем цикл по всем строкам входящего списка URL
 	for i := range incomingURLlist {
 		//	проверяем URL на допустимый синтаксис
 		if _, err := url.ParseRequestURI(incomingURLlist[i].OriginalURL); err != nil {
@@ -69,7 +69,7 @@ func (app *Application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 			return
 		}
 
-		//	изготавливаем shortURL и сохраняем в БД связку HASH<==>URL + UserID
+		//	изготавливаем shortURL и сохраняем в БД связку строку (HASH + <original_URL> + UserID)
 		shortURL, err := app.saveURLtoDB(incomingURLlist[i].OriginalURL, requestUserID.Value)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func (app *Application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 			return
 		}
 
-		//	создаем исходящий JSON список коротких URL
+		//	создаем исходящий список коротких URL
 		outgoingURLlist = append(outgoingURLlist, outgoingList{incomingURLlist[i].CorrelationID, shortURL})
 	}
 
@@ -89,7 +89,7 @@ func (app *Application) CreateShortURLBatchHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	// Изготавливаем и возвращаем ответ, вставляя короткий URL в тело ответа в JSON виде
+	// Изготавливаем и возвращаем ответ, вставляя список коротких URL в тело ответа в JSON виде
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(shortJSONURL) //	пишем JSON с URL в тело ответа

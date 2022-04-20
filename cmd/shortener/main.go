@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	//	github.com/jackc/pgx/stdlib - драйвер PostgreSQL для доступа к БД с использованием пакета database/sql
+	//	если хотим работать с БД напрямую, без database/sql надо использовать пакет - github.com/jackc/pgx/v4
 	_ "github.com/jackc/pgx/stdlib"
 
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
@@ -82,8 +84,7 @@ func main() {
 		if app.FileStorage != "" {
 			infoLog.Printf("File storage with saved URL was found: %s", app.FileStorage)
 			storage.InitialURLFulfilment(app.Storage, app.FileStorage)
-			infoLog.Println("Saved URLs were loaded in RAM")
-			infoLog.Println("All new URLs will be saved in file storage")
+			infoLog.Println("Saved URLs were loaded in RAM\nAll new URLs will be saved in the file storage")
 		} else {
 			//	если файловое хранилище не задано, то работаем только в оперативной памяти
 			infoLog.Println("FileStorage wasn't set")

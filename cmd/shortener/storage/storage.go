@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-//	rowStorage - структура записи в хранилище URL
+//	rowStorage - структура записи в хранилище URL в оперативной памяти
 type rowStorage struct {
 	longURL string
 	userID  string
@@ -25,7 +25,7 @@ func NewStorage() *Storage {
 
 // Методы работы с хранилищем URL
 
-// Insert - Метод для сохранения связки короткого и длинного URL + UserID.
+// Insert - Метод для сохранения связки HASH и (<original_URL> + UserID)
 func (s *Storage) Insert(shortURL, longURL, userID, filePath string) error {
 	//	пустые значения URL или UserID к вставке в хранилище не допускаются
 	if shortURL == "" || longURL == "" || userID == "" {
@@ -61,7 +61,7 @@ func (s *Storage) Insert(shortURL, longURL, userID, filePath string) error {
 	return nil
 }
 
-// Get - Метод для нахождения длинного URL по HASH из БД сохраненных URL
+// Get - Метод для нахождения <original_URL> по HASH
 func (s *Storage) Get(hash string) (longURL string, userID string, flag bool) {
 
 	s.mutex.Lock()
@@ -74,13 +74,13 @@ func (s *Storage) Get(hash string) (longURL string, userID string, flag bool) {
 	return s.data[hash].longURL, s.data[hash].userID, true
 }
 
-//	Структура записи связки HASH<==>URL для выдачи по запросу всех строк с одинаковым UserID
+//	Структура записи связки HASH и <original_URL> для выдачи по запросу всех строк с одинаковым UserID
 type HashURLrow struct {
 	Hash    string `json:"short_url"`
 	LongURL string `json:"original_url"`
 }
 
-// GetByUserID - Метод для нахождения списка сохраненных пар <shorten_URL> и <original_URL> по UserID
+// GetByUserID - Метод для нахождения списка сохраненных пар HASH и <original_URL> по UserID
 func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 
 	hashRows := make([]HashURLrow, 0)
@@ -89,6 +89,7 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
+	//	отбираем строки с указанным UserID и добавляем пару HASH и <original_URL> из них в исходящий слайс
 	for hash, row := range s.data {
 		if row.userID == userID {
 			hashRows = append(hashRows, HashURLrow{hash, row.longURL})
@@ -99,7 +100,7 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 	if len(hashRows) == 0 {
 		return nil, false
 	} else {
-		//	если нашли, то возвращаем список пар <shorten_URL> и <original_URL> для запрашиваемого UserID
+		//	если строки найдены, то возвращаем список пар HASH и <original_URL> для запрашенмого UserID
 		return hashRows, true
 	}
 }
