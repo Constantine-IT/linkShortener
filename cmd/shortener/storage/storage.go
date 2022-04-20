@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-//	EmptyNotAllowed - ошибка возникающая при попытке вставить пустое значение в любое поле структуры хранения URL в оперативной памяти
-var EmptyNotAllowed = errors.New("ram-storage: empty value is not allowed")
+//	ErrEmptyNotAllowed - ошибка возникающая при попытке вставить пустое значение в любое поле структуры хранения URL в оперативной памяти
+var ErrEmptyNotAllowed = errors.New("ram-storage: empty value is not allowed")
 
 //	rowStorage - структура записи в хранилище URL в оперативной памяти
 type rowStorage struct {
@@ -31,7 +31,7 @@ func NewStorage() *Storage {
 func (s *Storage) Insert(shortURL, longURL, userID, filePath string) error {
 	//	пустые значения URL или UserID к вставке в хранилище не допускаются
 	if shortURL == "" || longURL == "" || userID == "" {
-		return EmptyNotAllowed
+		return ErrEmptyNotAllowed
 	}
 
 	//	Блокируем структуру храниения в опративной памяти на время записи информации
