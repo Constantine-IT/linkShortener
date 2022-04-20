@@ -22,10 +22,8 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 	stmt := `insert into "shorten_urls" ("hash", "userid", "longurl") values ($1, $2, $3)`
 	_, err := d.DB.Exec(stmt, hash, userID, longURL)
 	if err != nil {
-		log.Println("New URL INSERT - FAILED")
 		return err
 	} else {
-		log.Println("New URL INSERT - SUCCESS")
 		return nil
 	}
 }
@@ -90,6 +88,5 @@ func (d *Database) Create() error {
 	if err != nil {
 		return err
 	}
-	log.Println("DATABASE creation - SUCCESS")
 	return nil
 }
