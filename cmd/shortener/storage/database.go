@@ -38,6 +38,7 @@ func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
 // GetByLongURL - Метод для нахождения HASH по <original_URL>
 func (d *Database) GetByLongURL(longURL string) (hash string, flg bool) {
 	var h string
+
 	stmt := `select "hash" from "shorten_urls" where "longurl" = $1`
 	err := d.DB.QueryRow(stmt, longURL).Scan(&h)
 	if errors.Is(err, sql.ErrNoRows) {

@@ -9,21 +9,20 @@ import (
 	"sync"
 )
 
-//	Структуры и методы работы с файловым хранилищем URL
+//	Структуры и методы работы с файлом-хранилищем URL
 
-//	FileStorage - путь к файлу-хранилищу URL
-
+//	URLwriter и URLreader - рабочие экземпляры файловых дескрипторов чтения и записи
 var URLwriter *writer
 var URLreader *reader
 
-//	структура файлового дескриптора для записи
+//	writer - структура файлового дескриптора для записи
 type writer struct {
 	mutex   sync.Mutex
 	file    *os.File
 	encoder *json.Encoder
 }
 
-//	конструктор, создающий экземпляр файлового дескриптора для записи
+//	NewWriter - конструктор, создающий экземпляр файлового дескриптора для записи
 func NewWriter(fileName string) (*writer, error) {
 	//	файл открывается только на запись с добавлением в конец файла, если файла нет - создаем
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
@@ -36,26 +35,26 @@ func NewWriter(fileName string) (*writer, error) {
 	}, nil
 }
 
-// метод записи в файл для экземпляра файлового дескриптора для записи
+// Write - метод записи в файл для экземпляра файлового дескриптора для записи
 func (p *writer) Write(URL *shortenURL) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	return p.encoder.Encode(&URL)
 }
 
-// метод закрытия файла для экземпляра файлового дескриптора для записи
+// Close - метод закрытия файла для экземпляра файлового дескриптора для записи
 func (p *writer) Close() error {
 	return p.file.Close()
 }
 
-//	структура файлового дескриптора для чтения
+//	reader - структура файлового дескриптора для чтения
 type reader struct {
 	mutex   sync.Mutex
 	file    *os.File
 	decoder *json.Decoder
 }
 
-//	конструктор, создающий экземпляр файлового дескриптора для чтения
+//	NewReader - конструктор, создающий экземпляр файлового дескриптора для чтения
 func NewReader(fileName string) (*reader, error) {
 	//	файл открывается только на чтение, если файла нет - создаем
 	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
@@ -68,7 +67,7 @@ func NewReader(fileName string) (*reader, error) {
 	}, nil
 }
 
-// метод чтения из файла для экземпляра файлового дескриптора для чтения
+// Read - метод чтения из файла для экземпляра файлового дескриптора для чтения
 func (c *reader) Read() (*shortenURL, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
@@ -79,12 +78,12 @@ func (c *reader) Read() (*shortenURL, error) {
 	return shortenURL, nil
 }
 
-// метод закрытия файла для экземпляра файлового дескриптора для чтения
+// Close - метод закрытия файла для экземпляра файлового дескриптора для чтения
 func (c *reader) Close() error {
 	return c.file.Close()
 }
 
-//	Метод первичного заполнения хранилища URL из файла сохраненных URL, при старте сервера
+//	InitialURLFulfilment - метод первичного заполнения хранилища URL из файла сохраненных URL, при старте сервера
 func InitialURLFulfilment(s *Storage) {
 
 	//	блокируем хранилище URL в оперативной памяти на время заливки данных

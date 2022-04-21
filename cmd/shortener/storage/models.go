@@ -2,6 +2,8 @@ package storage
 
 import "errors"
 
+//	Datasource - интерфейс источника данных URL
+//	может реализовываться базой данных (Database) или структурами в оперативной памяти (Storage)
 type Datasource interface {
 	Insert(hash, longURL, userID string) error
 	Get(hash string) (longURL, userID string, flg bool)
@@ -24,7 +26,7 @@ type shortenURL struct {
 	UserID  string `json:"user-id"`
 }
 
-//	rowStorage - структура записи в хранилище URL в оперативной памяти
+//	RowStorage - структура записи в хранилище URL в оперативной памяти
 //	используется для формирования структуры Storage и метода Storage.Insert
 type RowStorage struct {
 	longURL string

@@ -28,13 +28,13 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 	//	если файл для хранения URL не задан, то храним список только в оперативной памяти
 	if URLwriter != nil {
 		//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
-		shortenURL := shortenURL{
+		shortURL := shortenURL{
 			HashURL: hash,
 			LongURL: longURL,
 			UserID:  userID,
 		}
 		//	производим сохранение в файл связки HASH<==>URL+UserID
-		if err := URLwriter.Write(&shortenURL); err != nil {
+		if err := URLwriter.Write(&shortURL); err != nil {
 			return err
 		}
 	}
