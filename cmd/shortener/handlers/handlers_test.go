@@ -130,12 +130,11 @@ func TestHandlersResponse(t *testing.T) {
 		},
 	}
 
-	s := storage.Storage{Data: make(map[string]storage.RowStorage)}
 	app := &Application{
 		ErrorLog:   log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
 		InfoLog:    log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
 		BaseURL:    "http://127.0.0.1:8080",
-		Datasource: &s,
+		Datasource: &storage.Storage{Data: make(map[string]storage.RowStorage)},
 	}
 
 	for _, tt := range tests {

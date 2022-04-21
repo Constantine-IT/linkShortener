@@ -26,21 +26,15 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 	//	каждая запись - это сопоставленная с HASH структура из (URL + UserID) - rowStorage
 	s.Data[hash] = RowStorage{longURL, userID}
 	//	если файл для хранения URL не задан, то храним список только в оперативной памяти
-	if FileStorage != "" {
+	if URLwriter != nil {
 		//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
 		shortenURL := shortenURL{
 			HashURL: hash,
 			LongURL: longURL,
 			UserID:  userID,
 		}
-		//	создаем экземпляр writer для файла-хранилища
-		writtenURL, err := newWriter(FileStorage)
-		if err != nil {
-			return err
-		}
-		defer writtenURL.close()
 		//	производим сохранение в файл связки HASH<==>URL+UserID
-		if err := writtenURL.write(&shortenURL); err != nil {
+		if err := URLwriter.Write(&shortenURL); err != nil {
 			return err
 		}
 	}

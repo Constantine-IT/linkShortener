@@ -12,7 +12,9 @@ import (
 //	Структуры и методы работы с файловым хранилищем URL
 
 //	FileStorage - путь к файлу-хранилищу URL
-var FileStorage string
+
+var URLwriter *writer
+var URLreader *reader
 
 //	структура файлового дескриптора для записи
 type writer struct {
@@ -22,7 +24,7 @@ type writer struct {
 }
 
 //	конструктор, создающий экземпляр файлового дескриптора для записи
-func newWriter(fileName string) (*writer, error) {
+func NewWriter(fileName string) (*writer, error) {
 	//	файл открывается только на запись с добавлением в конец файла, если файла нет - создаем
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
@@ -35,14 +37,14 @@ func newWriter(fileName string) (*writer, error) {
 }
 
 // метод записи в файл для экземпляра файлового дескриптора для записи
-func (p *writer) write(URL *shortenURL) error {
+func (p *writer) Write(URL *shortenURL) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	return p.encoder.Encode(&URL)
 }
 
 // метод закрытия файла для экземпляра файлового дескриптора для записи
-func (p *writer) close() error {
+func (p *writer) Close() error {
 	return p.file.Close()
 }
 
@@ -54,7 +56,7 @@ type reader struct {
 }
 
 //	конструктор, создающий экземпляр файлового дескриптора для чтения
-func newReader(fileName string) (*reader, error) {
+func NewReader(fileName string) (*reader, error) {
 	//	файл открывается только на чтение, если файла нет - создаем
 	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
@@ -67,7 +69,7 @@ func newReader(fileName string) (*reader, error) {
 }
 
 // метод чтения из файла для экземпляра файлового дескриптора для чтения
-func (c *reader) read() (*shortenURL, error) {
+func (c *reader) Read() (*shortenURL, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	shortenURL := &shortenURL{}
@@ -78,19 +80,12 @@ func (c *reader) read() (*shortenURL, error) {
 }
 
 // метод закрытия файла для экземпляра файлового дескриптора для чтения
-func (c *reader) close() error {
+func (c *reader) Close() error {
 	return c.file.Close()
 }
 
 //	Метод первичного заполнения хранилища URL из файла сохраненных URL, при старте сервера
 func InitialURLFulfilment(s *Storage) {
-
-	//	создаем экземпляр reader для файла-хранилища HASH<==>URL
-	fileReader, err := newReader(FileStorage)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fileReader.close()
 
 	//	блокируем хранилище URL в оперативной памяти на время заливки данных
 	s.mutex.Lock()
@@ -98,7 +93,7 @@ func InitialURLFulfilment(s *Storage) {
 
 	for {
 		//	считываем записи по одной из файла-хранилища HASH + <original_URL> + UserID
-		readURL, err := fileReader.read()
+		readURL, err := URLreader.Read()
 		//	когда дойдем до конца файла - выходим из цикла чтения
 		if errors.Is(err, io.EOF) {
 			break

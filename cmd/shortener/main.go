@@ -14,8 +14,15 @@ import (
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
+//var App type &handlers.Application
+
+func init() {
+
+}
+
 func main() {
 
+	var err error
 	//	Приоритеты настроек:
 	//	1.	Переменные окружения - ENV
 	//	2.	Значения, задаваемые флагами при запуске из консоли
@@ -47,7 +54,7 @@ func main() {
 
 	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
 	//	информационных сообщений; базового адреса нашего сервера и используемых хранилищ для URL
-	app := &handlers.Application{
+	App := &handlers.Application{
 		ErrorLog: errorLog,
 		InfoLog:  infoLog,
 		BaseURL:  *BaseURL,
@@ -62,7 +69,7 @@ func main() {
 		//	открываем connect с базой данных PostgreSQL 10+ по указанному DATABASE_DSN
 		db, err := sql.Open("pgx", *DatabaseDSN)
 		if err != nil {
-			app.ErrorLog.Println(err.Error())
+			App.ErrorLog.Println(err.Error())
 		}
 		defer db.Close()
 		if err := db.Ping(); err == nil {
@@ -72,39 +79,48 @@ func main() {
     "longurl" text constraint unique_longurl unique not null,
     "userid" text not null)`)
 			if err != nil {
-				app.ErrorLog.Println("DATABASE structure creation - " + err.Error())
+				App.ErrorLog.Println("DATABASE structure creation - " + err.Error())
 			}
 		} else {
-			app.ErrorLog.Println("DATABASE open - " + err.Error())
+			App.ErrorLog.Println("DATABASE open - " + err.Error())
 			os.Exit(1)
 		}
-		app.InfoLog.Println("DATABASE creation - SUCCESS")
-		app.Datasource = &storage.Database{DB: db}
-		app.InfoLog.Println("DataBase connection has been established: " + *DatabaseDSN)
-		app.InfoLog.Println("Server works only with DB, without file or RAM storage")
+		App.InfoLog.Println("DATABASE creation - SUCCESS")
+		App.Datasource = &storage.Database{DB: db}
+		App.InfoLog.Println("DataBase connection has been established: " + *DatabaseDSN)
+		App.InfoLog.Println("Server works only with DB, without file or RAM storage")
 	} else {
-		app.InfoLog.Println("DataBase wasn't set")
+		App.InfoLog.Println("DataBase wasn't set")
 		s := storage.Storage{Data: make(map[string]storage.RowStorage)}
-		app.Datasource = &s
+		App.Datasource = &s
 		//	Первичное заполнение хранилища URL в оперативной памяти из файла-хранилища, если задан FILE_STORAGE_PATH
 		if *FileStorage != "" {
-			app.InfoLog.Printf("File storage with saved URL was found: %s", *FileStorage)
-			storage.FileStorage = *FileStorage
+			App.InfoLog.Printf("File storage with saved URL was found: %s", *FileStorage)
+			storage.URLreader, err = storage.NewReader(*FileStorage)
+			if err != nil {
+				log.Fatal(err)
+			}
+			storage.URLwriter, err = storage.NewWriter(*FileStorage)
+			if err != nil {
+				log.Fatal(err)
+			}
 			storage.InitialURLFulfilment(&s)
-			app.InfoLog.Println("Saved URLs were loaded in RAM")
+			App.InfoLog.Println("Saved URLs were loaded in RAM")
 		} else {
 			//	если файловое хранилище не задано, то работаем только в оперативной памяти
-			app.InfoLog.Println("FileStorage wasn't set")
+			App.InfoLog.Println("FileStorage wasn't set")
 		}
-		app.InfoLog.Println("Server works with RAM storage")
+		App.InfoLog.Println("Server works with RAM storage")
 	}
 
+	defer storage.URLreader.Close()
+	defer storage.URLwriter.Close()
 	//	запуск сервера
-	app.InfoLog.Printf("Server started at address: %s", *ServerAddress)
+	App.InfoLog.Printf("Server started at address: %s", *ServerAddress)
 	srv := &http.Server{
 		Addr:     *ServerAddress,
-		ErrorLog: errorLog,
-		Handler:  app.Routes(),
+		ErrorLog: App.ErrorLog,
+		Handler:  App.Routes(),
 	}
-	app.ErrorLog.Fatal(srv.ListenAndServe())
+	App.ErrorLog.Fatal(srv.ListenAndServe())
 }
