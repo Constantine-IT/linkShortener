@@ -27,7 +27,6 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 			log.Println(err.Error())
 			os.Exit(1)
 		}
-		//defer db.Close()
 		//	тестируем доступность базы данных
 		if err := db.Ping(); err != nil {
 			log.Println("DATABASE open - " + err.Error())

@@ -46,7 +46,7 @@ func main() {
 
 	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
 	//	информационных сообщений; базового адреса нашего сервера и используемых хранилищ для URL
-	App := &handlers.Application{
+	app := &handlers.Application{
 		ErrorLog:   errorLog,
 		InfoLog:    infoLog,
 		BaseURL:    *BaseURL,
@@ -56,11 +56,11 @@ func main() {
 	defer storage.URLreader.Close()
 	defer storage.URLwriter.Close()
 	//	запуск сервера
-	App.InfoLog.Printf("Server started at address: %s", *ServerAddress)
+	app.InfoLog.Printf("Server started at address: %s", *ServerAddress)
 	srv := &http.Server{
 		Addr:     *ServerAddress,
-		ErrorLog: App.ErrorLog,
-		Handler:  App.Routes(),
+		ErrorLog: app.ErrorLog,
+		Handler:  app.Routes(),
 	}
-	App.ErrorLog.Fatal(srv.ListenAndServe())
+	app.ErrorLog.Fatal(srv.ListenAndServe())
 }

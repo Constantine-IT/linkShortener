@@ -7,8 +7,6 @@ import (
 
 //	PingDataBaseHandler - обработчик проверки доступности базы данных через GET /ping
 func (app *Application) PingDataBaseHandler(w http.ResponseWriter, r *http.Request) {
-	//datasource := app.Datasource
-	//db := datasource.(storage.Database)
 	switch value := app.Datasource.(type) {
 	case *storage.Database:
 		err := value.DB.Ping()
