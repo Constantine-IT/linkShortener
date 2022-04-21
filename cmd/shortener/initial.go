@@ -20,8 +20,8 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 	//	2.	Если БД не задана, то используем файловое хранилище (задаваемое через FILE_STORAGE_PATH) и оперативную память
 	//	3.	Если не заданы ни БД, ни файловое хранилище, то работаем только с оперативной памятью - структура storage.Storage
 
-	if DatabaseDSN != "" { //	если база данных доступна, то работаем только с ней
-		//	открываем connect с базой данных PostgreSQL 10+ по указанному DATABASE_DSN
+	if DatabaseDSN != "" { //	если задана переменная среды DATABASE_DSN
+		//	открываем connect с базой данных PostgreSQL 10+
 		db, err := sql.Open("pgx", DatabaseDSN)
 		if err != nil {
 			log.Println(err.Error())
@@ -33,7 +33,7 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 			os.Exit(1)
 		} else {
 			//	если база данных доступна - создаём в ней структуры хранения
-			//	готовим SQL-statement длясоздание таблицы shorten_urls, если её не существует
+			//	готовим SQL-statement для создание таблицы shorten_urls, если её не существует
 			stmt := `create table if not exists "shorten_urls" (
 						"hash" text constraint hash_pk primary key not null,
    						"longurl" text constraint unique_longurl unique not null,
@@ -56,7 +56,7 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 		//	если задан FILE_STORAGE_PATH
 		if FileStorage != "" {
 			log.Printf("File storage with saved URL was found: %s", FileStorage)
-			//	порождаем reader и writer для файла хранилища URL
+			//	порождаем reader и writer для файла-хранилища URL
 			storage.URLreader, err = storage.NewReader(FileStorage)
 			if err != nil {
 				log.Fatal(err)

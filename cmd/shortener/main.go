@@ -53,6 +53,7 @@ func main() {
 		Datasource: initial(*DatabaseDSN, *FileStorage),
 	}
 
+	//	закрываем reader и writer для файла-хранилища URL
 	defer storage.URLreader.Close()
 	defer storage.URLwriter.Close()
 	//	запуск сервера
