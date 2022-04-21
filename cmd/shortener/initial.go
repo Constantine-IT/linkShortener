@@ -32,8 +32,8 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 		if err := db.Ping(); err != nil {
 			log.Println("DATABASE open - " + err.Error())
 			os.Exit(1)
-		} else {
-			//	если база данных доступна - создаём в ней структуры хранения
+		} else { //	если база данных доступна - создаём в ней структуры хранения
+
 			//	готовим SQL-statement для создание таблицы shorten_urls, если её не существует
 			stmt := `create table if not exists "shorten_urls" (
 						"hash" text constraint hash_pk primary key not null,
@@ -45,17 +45,16 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 			}
 		}
 		log.Println("DATABASE creation - SUCCESS")
-		strg = &storage.Database{DB: db}
+		strg = &storage.Database{DB: db} //	источник данных - база данных
 		log.Println("DataBase connection has been established: " + DatabaseDSN)
 		log.Println("Server works only with DB, without file or RAM storage")
-	} else {
+	} else { //	если база данных не указана или недоступна
 		log.Println("DataBase wasn't set")
 
 		s := storage.Storage{Data: make(map[string]storage.RowStorage)}
-		strg = &s
+		strg = &s //	источник данных - структура в оперативной памяти
 
-		//	если задан FILE_STORAGE_PATH
-		if FileStorage != "" {
+		if FileStorage != "" { //	если задан FILE_STORAGE_PATH
 			log.Printf("File storage with saved URL was found: %s", FileStorage)
 			//	порождаем reader и writer для файла-хранилища URL
 			storage.URLreader, err = storage.NewReader(FileStorage)
@@ -70,11 +69,10 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 			//	первичное заполнение хранилища URL в оперативной памяти из файла-хранилища
 			storage.InitialURLFulfilment(&s)
 			log.Println("Saved URLs were loaded in RAM")
-		} else {
-			//	если файловое хранилище не задано, то работаем только в оперативной памяти
+		} else { //	если файловое хранилище не задано, то работаем только в оперативной памяти
 			log.Println("FileStorage wasn't set")
 		}
 		log.Println("Server works with RAM storage")
 	}
-	return strg
+	return strg //	возращаем выбранный источник данных для URL
 }
