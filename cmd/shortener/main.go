@@ -5,9 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	//	github.com/jackc/pgx/stdlib - драйвер PostgreSQL для доступа к БД с использованием пакета database/sql
-	//	если хотим работать с БД напрямую, без database/sql надо использовать пакет - github.com/jackc/pgx/v4
-	//_ "github.com/jackc/pgx/stdlib"
 
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
 	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"

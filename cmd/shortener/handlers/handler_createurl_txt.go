@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"errors"
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 //	CreateShortURLHandler - обработчик POST с URL в виде текста

@@ -1,10 +1,12 @@
 package handlers
 
 import (
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"log"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"log"
+
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 type Application struct {

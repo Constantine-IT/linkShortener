@@ -3,8 +3,9 @@ package handlers
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 	"strings"
+
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 //	saveURLtoDB - вспомогательная функция, создающая HASH из связки (<original_URL> + UserID),
