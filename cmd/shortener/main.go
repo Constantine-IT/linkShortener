@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	h "github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
-	m "github.com/Constantine-IT/linkShortener/cmd/shortener/models"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 func main() {
@@ -18,37 +18,53 @@ func main() {
 	//	3.	Значения по умолчанию.
 
 	//	Считываем флаги запуска из командной строки и задаём значения по умолчанию, если флаг при запуске не указан
-	serverAddress := flag.String("a", "127.0.0.1:8080", "SERVER_ADDRESS - адрес запуска HTTP-сервера")
-	baseURL := flag.String("b", "http://127.0.0.1:8080", "BASE_URL - базовый адрес результирующего сокращённого URL")
-	fileStoragePath := flag.String("f", "", "FILE_STORAGE_PATH - путь до файла с сокращёнными URL")
+	ServerAddress := flag.String("a", "127.0.0.1:8080", "SERVER_ADDRESS - адрес запуска HTTP-сервера")
+	BaseURL := flag.String("b", "http://127.0.0.1:8080", "BASE_URL - базовый адрес результирующего сокращённого URL")
+	DatabaseDSN := flag.String("d", "", "DATABASE_DSN - адрес подключения к БД (PostgreSQL)")
+	FileStorage := flag.String("f", "", "FILE_STORAGE_PATH - путь до файла с сокращёнными URL")
 	flag.Parse()
 
-	//	значание флагов записываем в локальные переменные
-	srvAddr := *serverAddress
-	h.Addr = *baseURL
-	m.FilePath = *fileStoragePath
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	//	считываем переменные окружения, если они заданы - переопределяем соответствующие локальные переменные:
-	if u, flag := os.LookupEnv("SERVER_ADDRESS"); flag {
-		srvAddr = u
+	if u, flg := os.LookupEnv("SERVER_ADDRESS"); flg {
+		*ServerAddress = u
 	}
-	if u, flag := os.LookupEnv("BASE_URL"); flag {
-		h.Addr = u
+	if u, flg := os.LookupEnv("BASE_URL"); flg {
+		*BaseURL = u
 	}
-	if u, flag := os.LookupEnv("FILE_STORAGE_PATH"); flag {
-		m.FilePath = u
+	if u, flg := os.LookupEnv("DATABASE_DSN"); flg {
+		*DatabaseDSN = u
 	}
-	
-	//	Первичное заполнение БД <shorten_URL> из файла-хранилища, если задан FILE_STORAGE_PATH
-	if m.FilePath != "" {
-		m.InitialFulfilmentURLDB()
+	if u, flg := os.LookupEnv("FILE_STORAGE_PATH"); flg {
+		*FileStorage = u
 	}
 
-	//	запуск сервера
-	log.Printf("Сервер будет запущен по адресу: %s", srvAddr)
-	srv := &http.Server{
-		Addr:    srvAddr,
-		Handler: h.Routes(),
+	//	определяем источник данных для работы с URL
+	datasource, err := initial(*DatabaseDSN, *FileStorage)
+	if err != nil {
+		errorLog.Fatal(err)
 	}
-	log.Fatal(srv.ListenAndServe())
+
+	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
+	//	информационных сообщений; базового адреса нашего сервера и используемых хранилищ для URL
+	app := &handlers.Application{
+		ErrorLog:   errorLog,
+		InfoLog:    infoLog,
+		BaseURL:    *BaseURL,
+		Datasource: datasource,
+	}
+
+	//	закрываем reader и writer для файла-хранилища URL
+	defer storage.URLreader.Close()
+	defer storage.URLwriter.Close()
+	//	запуск сервера
+	app.InfoLog.Printf("Server started at address: %s", *ServerAddress)
+	srv := &http.Server{
+		Addr:     *ServerAddress,
+		ErrorLog: app.ErrorLog,
+		Handler:  app.Routes(),
+	}
+	app.ErrorLog.Fatal(srv.ListenAndServe())
 }

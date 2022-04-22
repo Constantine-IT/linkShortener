@@ -1,4 +1,4 @@
-package models
+package storage
 
 import (
 	"testing"
@@ -9,13 +9,14 @@ func TestInsert(t *testing.T) {
 		shortURL string
 		longURL  string
 	}
+
 	tests := []struct {
 		name     string
 		shortURL string
 		longURL  string
 		want     want
 	}{
-		{name: "Data Model test #1: POST longURL then GET with right shortURL",
+		{name: "Data methods test #1: POST longURL then GET with right shortURL",
 			shortURL: "SDFGHJK",
 			longURL:  "http://test.test/test1",
 			want: want{
@@ -23,7 +24,7 @@ func TestInsert(t *testing.T) {
 				longURL:  "http://test.test/test1",
 			},
 		},
-		{name: "Data Model test #2: POST longURL then GET with wrong shortURL",
+		{name: "Data methods test #2: POST longURL then GET with wrong shortURL",
 			shortURL: "QWERTYU",
 			longURL:  "http://test.test/test1",
 			want: want{
@@ -34,8 +35,12 @@ func TestInsert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Insert(tt.shortURL, tt.longURL)
-			gotLongURL, gotFlag := Get(tt.want.shortURL)
+			s := Storage{Data: make(map[string]RowStorage)}
+			err := s.Insert(tt.shortURL, tt.longURL, "ccc387d791a5776279cdd9d585f160fd")
+			if err != nil {
+				t.Errorf("Error in INSERT method: %s", err.Error())
+			}
+			gotLongURL, _, gotFlag := s.Get(tt.want.shortURL)
 
 			if (gotFlag == true) && (gotLongURL != tt.want.longURL) {
 				t.Errorf("GET return longURL = %v, but want %v", gotLongURL, tt.want.longURL)

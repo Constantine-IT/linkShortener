@@ -3,20 +3,24 @@ package handlers
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 //	These are integration tests with following flow:
 //	receive URL_for_shorting in POST body; create a <shorten_URL> from it and send <shorten_URL> to the client inside BODY,
 //	receive <shorten_URL> from client with GET method and response to it with initial URL in the field "location" in header
 
-func TestShortURLJSONHandler(t *testing.T) {
+func TestIntegrationWithJSONbody(t *testing.T) {
 
 	type want struct {
 		inBetweenStatusCode  int
@@ -46,9 +50,17 @@ func TestShortURLJSONHandler(t *testing.T) {
 			},
 		},
 	}
+
+	app := &Application{
+		ErrorLog:   log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		InfoLog:    log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		BaseURL:    "http://127.0.0.1:8080",
+		Datasource: &storage.Storage{Data: make(map[string]storage.RowStorage)},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := Routes()
+			r := app.Routes()
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 
@@ -70,7 +82,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
-			body = strings.TrimPrefix(body, Addr)
+			body = strings.TrimPrefix(body, app.BaseURL)
 
 			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
@@ -81,7 +93,7 @@ func TestShortURLJSONHandler(t *testing.T) {
 	}
 }
 
-func TestShortURLHandler(t *testing.T) {
+func TestIntegrationWithTXTbody(t *testing.T) {
 
 	type want struct {
 		inBetweenStatusCode  int
@@ -111,9 +123,17 @@ func TestShortURLHandler(t *testing.T) {
 			},
 		},
 	}
+
+	app := &Application{
+		ErrorLog:   log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		InfoLog:    log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		BaseURL:    "http://127.0.0.1:8080",
+		Datasource: &storage.Storage{Data: make(map[string]storage.RowStorage)},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := Routes()
+			r := app.Routes()
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 
@@ -124,7 +144,7 @@ func TestShortURLHandler(t *testing.T) {
 
 			//	теперь в body лежит <shorten_URL>, но тестовый сервер принимает только PATH без SCHEME и HOST
 			//	так что вырезаем из <shorten_URL> прописанный в глобальной переменной handlers.Addr - BASE_URL
-			body = strings.TrimPrefix(body, Addr)
+			body = strings.TrimPrefix(body, app.BaseURL)
 
 			// используем содержимое body, как адрес запроса; само тело запроса оставляем пустым, так как это GET
 			resp, _ = testRequest(t, ts, tt.secondRequestType, body, "")
