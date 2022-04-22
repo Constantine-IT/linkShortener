@@ -24,12 +24,12 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 	if DatabaseDSN != "" { //	если задана переменная среды DATABASE_DSN
 		//	открываем connect с базой данных PostgreSQL 10+
 		db, err := sql.Open("pgx", DatabaseDSN)
-		if err != nil {
+		if err != nil {	//	при ошибке открытия, прерываем работу приложения
 			log.Println(err.Error())
 			os.Exit(1)
 		}
 		//	тестируем доступность базы данных
-		if err := db.Ping(); err != nil {
+		if err := db.Ping(); err != nil {	//	если база недоступна, прерываем работу приложения
 			log.Println("DATABASE open - " + err.Error())
 			os.Exit(1)
 		} else { //	если база данных доступна - создаём в ней структуры хранения
@@ -45,15 +45,18 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 			}
 		}
 		log.Println("DATABASE creation - SUCCESS")
-		strg = &storage.Database{DB: db} //	источник данных - база данных
+		//	если всё прошло успешно, возвращаем в качестве источника данных - базу данных
+		strg = &storage.Database{DB: db}
 		log.Println("DataBase connection has been established: " + DatabaseDSN)
 		log.Println("Server works only with DB, without file or RAM storage")
 	} else { //	если база данных не указана или недоступна
 		log.Println("DataBase wasn't set")
 
+		//	возвращаем в качестве источника данных - структуру в оперативной памяти
 		s := storage.Storage{Data: make(map[string]storage.RowStorage)}
-		strg = &s //	источник данных - структура в оперативной памяти
+		strg = &s
 
+		//	опционально подключаем файл-хранилище URL
 		if FileStorage != "" { //	если задан FILE_STORAGE_PATH
 			log.Printf("File storage with saved URL was found: %s", FileStorage)
 			//	порождаем reader и writer для файла-хранилища URL
@@ -66,10 +69,10 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource) {
 				log.Fatal(err)
 			}
 
-			//	первичное заполнение хранилища URL в оперативной памяти из файла-хранилища
+			//	производим первичное заполнение хранилища URL в оперативной памяти из файла-хранилища URL
 			storage.InitialURLFulfilment(&s)
 			log.Println("Saved URLs were loaded in RAM")
-		} else { //	если файловое хранилище не задано, то работаем только в оперативной памяти
+		} else { //	если файловое хранилище не задано, то работаем только со структурой в оперативной памяти
 			log.Println("FileStorage wasn't set")
 		}
 		log.Println("Server works with RAM storage")
