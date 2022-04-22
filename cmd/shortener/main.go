@@ -41,13 +41,19 @@ func main() {
 		*FileStorage = u
 	}
 
+	//	определяем источник данных для работы с URL
+	datasource, err := initial(*DatabaseDSN, *FileStorage)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
 	//	информационных сообщений; базового адреса нашего сервера и используемых хранилищ для URL
 	app := &handlers.Application{
 		ErrorLog:   errorLog,
 		InfoLog:    infoLog,
 		BaseURL:    *BaseURL,
-		Datasource: initial(*DatabaseDSN, *FileStorage),
+		Datasource: datasource,
 	}
 
 	//	закрываем reader и writer для файла-хранилища URL

@@ -29,13 +29,10 @@ func (app *Application) saveURLtoDB(longURL, userID string) (string, error) {
 	err = app.Datasource.Insert(hash, longURL, userID)
 
 	if err == nil {
-		app.InfoLog.Println("New URL INSERT - SUCCESS - " + longURL)
 		// Изготавливаем  <shorten_URL> из базового адреса нашего сервера и HASH
 		shortURL := strings.Join([]string{app.BaseURL, hash}, "/")
-		app.InfoLog.Println("New SHORT URL was created - " + shortURL)
 		return shortURL, nil
 	} else {
-		app.ErrorLog.Println("New URL INSERT - FAILED: " + err.Error())
 		return "", err
 	}
 }

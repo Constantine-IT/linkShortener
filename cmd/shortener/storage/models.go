@@ -34,8 +34,7 @@ type RowStorage struct {
 }
 
 //	ErrConflictRecord - ошибка возникающая, когда пытаемся вставить в базу запись c уже существующим URL
-var ErrConflictRecord = errors.New("storage-database: URL-record already exist")
+var ErrConflictRecord = errors.New("DataBase: URL-record already exist")
 
 //	ErrEmptyNotAllowed - ошибка возникающая при попытке вставить пустое значение в любое поле структуры хранения URL
-//	используется в методе Storage.Insert
-var ErrEmptyNotAllowed = errors.New("ram-storage: empty value is not allowed")
+var ErrEmptyNotAllowed = errors.New("DataBase: empty value is not allowed")

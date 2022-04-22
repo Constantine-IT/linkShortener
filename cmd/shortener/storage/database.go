@@ -12,14 +12,17 @@ type Database struct {
 
 // Insert - Метод для сохранения связки HASH и (<original_URL> + UserID)
 func (d *Database) Insert(hash, longURL, userID string) error {
+	//	пустые значения URL или UserID к вставке в хранилище не допускаются
+	if hash == "" || longURL == "" || userID == "" {
+		return ErrEmptyNotAllowed
+	}
 	//	готовим SQL-statement для вставки в базу и запускаем его на исполнение
 	stmt := `insert into "shorten_urls" ("hash", "userid", "longurl") values ($1, $2, $3)`
 	_, err := d.DB.Exec(stmt, hash, userID, longURL)
 	if err != nil {
 		return err
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // Get - Метод для нахождения <original_URL> и UserID по HASH

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"sync"
 )
@@ -84,7 +83,7 @@ func (c *reader) Close() error {
 }
 
 //	InitialURLFulfilment - метод первичного заполнения хранилища URL из файла сохраненных URL, при старте сервера
-func InitialURLFulfilment(s *Storage) {
+func InitialURLFulfilment(s *Storage) error {
 
 	//	блокируем хранилище URL в оперативной памяти на время заливки данных
 	s.mutex.Lock()
@@ -98,9 +97,10 @@ func InitialURLFulfilment(s *Storage) {
 			break
 		}
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		//	добавляем связку HASH и (<original_URL> + UserID) в хранилище
 		s.Data[readURL.HashURL] = RowStorage{readURL.LongURL, readURL.UserID}
 	}
+	return nil
 }
