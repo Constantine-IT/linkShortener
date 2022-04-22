@@ -33,7 +33,7 @@ func initial(DatabaseDSN, FileStorage string) (strg storage.Datasource, err erro
    						"longurl" text constraint unique_longurl unique not null,
    						"userid" text not null)`
 			_, err := db.Exec(stmt)
-			if err != nil {	//	при ошибке в создании структур хранения в базе данных, прерываем работу приложения
+			if err != nil { //	при ошибке в создании структур хранения в базе данных, прерываем работу приложения
 				return nil, err
 			}
 		}
