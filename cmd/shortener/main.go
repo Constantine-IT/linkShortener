@@ -47,18 +47,18 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
-	//	инициализируем контекст нашего приложения, для определения в дальнейшем путей логирования ошибок и
-	//	информационных сообщений; базового адреса нашего сервера и используемых хранилищ для URL
+	//	инициализируем контекст нашего приложения
 	app := &handlers.Application{
-		ErrorLog:   errorLog,
-		InfoLog:    infoLog,
-		BaseURL:    *BaseURL,
-		Datasource: datasource,
+		ErrorLog:   errorLog,		//	журнал ошибок
+		InfoLog:    infoLog,		//	журнал информационных сообщений
+		BaseURL:    *BaseURL,		//	базоовый адрес сервера
+		Datasource: datasource,	//	источник данных для хранения URL
 	}
 
-	//	закрываем reader и writer для файла-хранилища URL
+	//	при остановке сервера отложенно закрываем reader и writer для файла-хранилища URL
 	defer storage.URLreader.Close()
 	defer storage.URLwriter.Close()
+
 	//	запуск сервера
 	app.InfoLog.Printf("Server started at address: %s", *ServerAddress)
 	srv := &http.Server{

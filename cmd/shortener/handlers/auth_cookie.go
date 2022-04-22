@@ -22,8 +22,7 @@ func (app *Application) AuthCookie(next http.Handler) http.Handler {
 		// инициализируем интерфейс симметричного шифрования - cipher.Block
 		aesblock, err := aes.NewCipher(secretKey)
 		if err != nil {
-			app.ErrorLog.Printf("Creating cipher.Block error: %v\n", err)
-			return
+			app.ErrorLog.Fatal(err)
 		}
 
 		//	проверяем на наличие в запросе cookie с "userid"
@@ -32,7 +31,7 @@ func (app *Application) AuthCookie(next http.Handler) http.Handler {
 			// декодируем userid в тип []byte
 			requestUserIDByte, err := hex.DecodeString(requestUserID.Value)
 			if err != nil {
-				app.ErrorLog.Printf("error with decoding of request Auth Cookie to []byte: %v\n", err)
+				app.ErrorLog.Printf("Auth Cookie decoding: %v\n", err)
 			}
 			// расшифровываем "userid" в переменную authCookie, используя созданный ранее cipher.Block AES
 			authCookie := make([]byte, aes.BlockSize)
@@ -45,13 +44,13 @@ func (app *Application) AuthCookie(next http.Handler) http.Handler {
 			}
 		}
 
-		//	если cookie "userid" отсутствует, или не прошло проверку подлинности, то генерируем новый User ID длиной 10 байт,
+		//	если cookie "userid" отсутствует, или не прошло проверку подлинности, то генерируем новый UserID длиной 10 байт,
 		userID, err := generateRandom(10)
 		if err != nil {
 			app.ErrorLog.Printf("UserId generation error: %v\n", err)
 			return
 		}
-		//	добавляем к нему проверочную фразу - nonce (длиной 6 байт), получаем slice из 16 байт - размер блока для AES.
+		//	добавляем к UserID проверочную фразу - nonce (длиной 6 байт), получаем slice из 16 байт - размер блока для AES.
 		//	всё что больше размера блока AES - алгоритм обрезал бы.
 		authCookie := make([]byte, aes.BlockSize) // зашифровываем в переменную authCookie
 		aesblock.Encrypt(authCookie, append(userID, nonce...))
