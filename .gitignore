@@ -5,7 +5,7 @@
 *.so
 *.dylib
 
-# DS_Store не нужно отслеживать изменения
+# DS_Store - no needed to check
 *.DS_Store
 .DS_Store
 .DSStore
