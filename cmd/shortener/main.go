@@ -44,7 +44,7 @@ func main() {
 	//	инициализируем logger для сообщений об ошибках
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	//	инициализируем источник данных нашего приложения для работы с URL
+	//	инициализируем источники данных нашего приложения для работы с URL
 	datasource, err := storage.NewDatasource(*DatabaseDSN, *FileStorage)
 	if err != nil {
 		errorLog.Fatal(err)
@@ -58,7 +58,7 @@ func main() {
 		Datasource: datasource, //	источник данных для хранения URL
 	}
 
-	//	при остановке сервера отложенно закрываем все источники данных
+	//	при остановке сервера отложенно закроем все источники данных
 	defer app.Datasource.Close()
 
 	//	запуск сервера
