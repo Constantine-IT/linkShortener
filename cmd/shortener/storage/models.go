@@ -9,6 +9,7 @@ type Datasource interface {
 	Get(hash string) (longURL, userID string, flg bool)
 	GetByLongURL(longURL string) (hash string, flg bool)
 	GetByUserID(userID string) ([]HashURLrow, bool)
+	Close() error
 }
 
 //	HashURLrow - структура для выдачи (HASH + <original_URL>) по запросу строк с одинаковым UserID

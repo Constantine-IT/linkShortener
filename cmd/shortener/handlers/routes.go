@@ -10,10 +10,10 @@ import (
 )
 
 type Application struct {
-	ErrorLog   *log.Logger
-	InfoLog    *log.Logger
-	BaseURL    string
-	Datasource storage.Datasource
+	ErrorLog   *log.Logger        //	журнал ошибок
+	InfoLog    *log.Logger        //	журнал информационных сообщений
+	BaseURL    string             //	базоовый адрес сервера
+	Datasource storage.Datasource //	источник данных для хранения URL
 }
 
 func (app *Application) Routes() chi.Router {

@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-
 	//	Приоритеты настроек:
 	//	1.	Переменные окружения - ENV
 	//	2.	Значения, задаваемые флагами при запуске из консоли
@@ -22,12 +21,11 @@ func main() {
 	BaseURL := flag.String("b", "http://127.0.0.1:8080", "BASE_URL - базовый адрес результирующего сокращённого URL")
 	DatabaseDSN := flag.String("d", "", "DATABASE_DSN - адрес подключения к БД (PostgreSQL)")
 	FileStorage := flag.String("f", "", "FILE_STORAGE_PATH - путь до файла с сокращёнными URL")
+	//	парсим флаги
 	flag.Parse()
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-
-	//	считываем переменные окружения, если они заданы - переопределяем соответствующие локальные переменные:
+	//	считываем переменные окружения
+	//	если они заданы - переопределяем соответствующие локальные переменные:
 	if u, flg := os.LookupEnv("SERVER_ADDRESS"); flg {
 		*ServerAddress = u
 	}
@@ -41,26 +39,31 @@ func main() {
 		*FileStorage = u
 	}
 
-	//	определяем источник данных для работы с URL
-	datasource, err := initial(*DatabaseDSN, *FileStorage)
+	//	инициализируем logger для информационных сообщений
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	//	инициализируем logger для сообщений об ошибках
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	//	инициализируем источники данных нашего приложения для работы с URL
+	datasource, err := storage.NewDatasource(*DatabaseDSN, *FileStorage)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
 
 	//	инициализируем контекст нашего приложения
 	app := &handlers.Application{
-		ErrorLog:   errorLog,		//	журнал ошибок
-		InfoLog:    infoLog,		//	журнал информационных сообщений
-		BaseURL:    *BaseURL,		//	базоовый адрес сервера
-		Datasource: datasource,	//	источник данных для хранения URL
+		ErrorLog:   errorLog,   //	журнал ошибок
+		InfoLog:    infoLog,    //	журнал информационных сообщений
+		BaseURL:    *BaseURL,   //	базоовый адрес сервера
+		Datasource: datasource, //	источник данных для хранения URL
 	}
 
-	//	при остановке сервера отложенно закрываем reader и writer для файла-хранилища URL
-	defer storage.URLreader.Close()
-	defer storage.URLwriter.Close()
+	//	при остановке сервера отложенно закроем все источники данных
+	defer app.Datasource.Close()
 
 	//	запуск сервера
-	app.InfoLog.Printf("Server started at address: %s", *ServerAddress)
+	infoLog.Printf("Server started at address: %s", *ServerAddress)
+
 	srv := &http.Server{
 		Addr:     *ServerAddress,
 		ErrorLog: app.ErrorLog,

@@ -26,7 +26,7 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 	//	каждая запись - это сопоставленная с HASH структура из (URL + UserID) - rowStorage
 	s.Data[hash] = RowStorage{longURL, userID}
 	//	если файл для хранения URL не задан, то храним список только в оперативной памяти
-	if URLwriter != nil {
+	if fileWriter != nil {
 		//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
 		shortURL := shortenURL{
 			HashURL: hash,
@@ -34,7 +34,7 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 			UserID:  userID,
 		}
 		//	производим сохранение в файл связки HASH<==>URL+UserID
-		if err := URLwriter.Write(&shortURL); err != nil {
+		if err := fileWriter.Write(&shortURL); err != nil {
 			return err
 		}
 	}
@@ -93,4 +93,21 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 		//	если строки найдены, то возвращаем список пар HASH и <original_URL> для запрашенмого UserID
 		return hashRows, true
 	}
+}
+
+func (s *Storage) Close() error {
+	var err error
+
+	//	при остановке сервера отложенно закрываем reader и writer для файла-хранилища URL
+	err = fileReader.Close()
+	if err != nil {
+		return err
+	}
+
+	err = fileWriter.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

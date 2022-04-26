@@ -10,22 +10,38 @@ type Database struct {
 	DB *sql.DB
 }
 
-// Insert - Метод для сохранения связки HASH и (<original_URL> + UserID)
+//	db - рабочий экземпляр структуры Database
+var db Database
+
+// Insert - метод для сохранения связки HASH и (<original_URL> + UserID)
 func (d *Database) Insert(hash, longURL, userID string) error {
 	//	пустые значения URL или UserID к вставке в хранилище не допускаются
 	if hash == "" || longURL == "" || userID == "" {
 		return ErrEmptyNotAllowed
 	}
-	//	готовим SQL-statement для вставки в базу и запускаем его на исполнение
-	stmt := `insert into "shorten_urls" ("hash", "userid", "longurl") values ($1, $2, $3)`
-	_, err := d.DB.Exec(stmt, hash, userID, longURL)
+
+	//	начинаем тразакцию
+	tx, err := db.DB.Begin()
 	if err != nil {
 		return err
 	}
-	return nil
+	defer tx.Rollback() //	при ошибке выполнения - откатываем транзакцию
+
+	//	готовим SQL-statement для вставки в базу
+	stmt, err := tx.Prepare(`insert into "shorten_urls" ("hash", "userid", "longurl") values ($1, $2, $3)`)
+	if err != nil {
+		return err
+	}
+
+	//	 запускаем SQL-statement на исполнение
+	if _, err := stmt.Exec(hash, userID, longURL); err != nil {
+		return err
+	}
+
+	return tx.Commit() //	при успешном выполнении вставки - фиксируем транзакцию
 }
 
-// Get - Метод для нахождения <original_URL> и UserID по HASH
+// Get - метод для нахождения <original_URL> и UserID по HASH
 func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
 	var url string
 	var user string
@@ -38,7 +54,7 @@ func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
 	return url, user, true
 }
 
-// GetByLongURL - Метод для нахождения HASH по <original_URL>
+// GetByLongURL - метод для нахождения HASH по <original_URL>
 func (d *Database) GetByLongURL(longURL string) (hash string, flg bool) {
 	var h string
 
@@ -50,7 +66,7 @@ func (d *Database) GetByLongURL(longURL string) (hash string, flg bool) {
 	return h, true
 }
 
-// GetByUserID - Метод для нахождения списка сохраненных пар HASH и <original_URL> по UserID
+// GetByUserID - метод для нахождения списка сохраненных пар HASH и <original_URL> по UserID
 func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 	var hash, longurl string
 	hashRows := make([]HashURLrow, 0)
@@ -70,4 +86,26 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 		hashRows = append(hashRows, HashURLrow{hash, longurl})
 	}
 	return hashRows, true
+}
+
+//	Close - метод, закрывающий reader и writer для файла-хранилища URL, а также connect к базе данных
+func (d *Database) Close() error {
+	var err error
+
+	err = fileReader.Close()
+	if err != nil {
+		return err
+	}
+
+	err = fileWriter.Close()
+	if err != nil {
+		return err
+	}
+
+	err = db.DB.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
