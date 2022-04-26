@@ -10,9 +10,9 @@ import (
 
 //	Структуры и методы работы с файлом-хранилищем URL
 
-//	URLwriter и URLreader - рабочие экземпляры файловых дескрипторов чтения и записи
-var URLwriter *writer
-var URLreader *reader
+//	fileWriter и fileReader - рабочие экземпляры файловых дескрипторов чтения и записи
+var fileWriter *writer
+var fileReader *reader
 
 //	writer - структура файлового дескриптора для записи
 type writer struct {
@@ -91,7 +91,7 @@ func InitialURLFulfilment(s *Storage) error {
 
 	for {
 		//	считываем записи по одной из файла-хранилища HASH + <original_URL> + UserID
-		readURL, err := URLreader.Read()
+		readURL, err := fileReader.Read()
 		//	когда дойдем до конца файла - выходим из цикла чтения
 		if errors.Is(err, io.EOF) {
 			break

@@ -10,6 +10,9 @@ type Database struct {
 	DB *sql.DB
 }
 
+//	db - рабочий экземпляр базы данных
+var db Database
+
 // Insert - Метод для сохранения связки HASH и (<original_URL> + UserID)
 func (d *Database) Insert(hash, longURL, userID string) error {
 	//	пустые значения URL или UserID к вставке в хранилище не допускаются
@@ -70,4 +73,26 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 		hashRows = append(hashRows, HashURLrow{hash, longurl})
 	}
 	return hashRows, true
+}
+
+func (d *Database) Close() error {
+	var err error
+
+	//	при остановке сервера закрываем reader и writer для файла-хранилища URL, а также connect к базе данных
+	err = fileReader.Close()
+	if err != nil {
+		return err
+	}
+
+	err = fileWriter.Close()
+	if err != nil {
+		return err
+	}
+
+	err = db.DB.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
