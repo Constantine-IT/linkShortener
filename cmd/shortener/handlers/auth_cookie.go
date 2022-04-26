@@ -14,8 +14,12 @@ import (
 //	шифруем его с помощью симметричного алгоритма AES и вставляем в Response.
 func (app *Application) AuthCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//	слайс длиной 16 байт - переменная в которую будет помещаться информация при шифровке/расшифровке
+		authCookie := make([]byte, aes.BlockSize)
+
 		//	секретный ключ симметричного шифрования. Длина ключа - 16 байт.
 		secretKey := []byte("sbHYDYWgdakkHHDS")
+
 		//	проверочная фраза длиной 6 байт, в связке с userid (длиной 10 байт) - составит суммарно 16 байт
 		nonce := []byte("YANDEX")
 
@@ -33,8 +37,7 @@ func (app *Application) AuthCookie(next http.Handler) http.Handler {
 			if err != nil {
 				app.ErrorLog.Printf("Auth Cookie decoding: %v\n", err)
 			}
-			// расшифровываем "userid" в переменную authCookie, используя созданный ранее cipher.Block AES
-			authCookie := make([]byte, aes.BlockSize)
+			// расшифровываем "userid" из Cookie в переменную authCookie, используя созданный ранее cipher.Block AES
 			aesblock.Decrypt(authCookie, requestUserIDByte)
 			//	проверяем, не заканчивается ли authCookie символами проверочной фразы - nonce
 			//	если ДА, то проверка подлинности пройдена
@@ -52,10 +55,9 @@ func (app *Application) AuthCookie(next http.Handler) http.Handler {
 		}
 		//	добавляем к UserID проверочную фразу - nonce (длиной 6 байт), получаем slice из 16 байт - размер блока для AES.
 		//	всё что больше размера блока AES - алгоритм обрезал бы.
-		authCookie := make([]byte, aes.BlockSize) // зашифровываем в переменную authCookie
-		aesblock.Encrypt(authCookie, append(userID, nonce...))
+		aesblock.Encrypt(authCookie, append(userID, nonce...))	// зашифровываем (UserID + nonce) в переменную authCookie
 
-		//	вставляем зашифрованный userid в response в виде cookie со сроком жизни - 1 год.
+		//	вставляем зашифрованный (UserID + nonce) в response в виде cookie со сроком жизни - 1 год.
 		http.SetCookie(w, &http.Cookie{
 			Name: "userid", Value: hex.EncodeToString(authCookie), Expires: time.Now().AddDate(1, 0, 0),
 		})

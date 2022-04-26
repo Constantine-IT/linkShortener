@@ -18,21 +18,21 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 		var err error
 		//	открываем connect с базой данных PostgreSQL 10+
 		db.DB, err = sql.Open("pgx", dbDSN)
-		if err != nil { //	при ошибке открытия, прерываем работу приложения
+		if err != nil { //	при ошибке открытия, прерываем работу конструктора
 			return nil, err
 		}
 		//	тестируем доступность базы данных
-		if err := db.DB.Ping(); err != nil { //	если база недоступна, прерываем работу приложения
+		if err := db.DB.Ping(); err != nil { //	если база недоступна, прерываем работу конструктора
 			return nil, err
 		} else { //	если база данных доступна - создаём в ней структуры хранения
 
-			//	готовим SQL-statement для создание таблицы shorten_urls, если её не существует
+			//	готовим SQL-statement для создания таблицы shorten_urls, если её не существует
 			stmt := `create table if not exists "shorten_urls" (
-						"hash" text constraint hash_pk primary key not null,
+							"hash" text constraint hash_pk primary key not null,
    						"longurl" text constraint unique_longurl unique not null,
    						"userid" text not null)`
 			_, err := db.DB.Exec(stmt)
-			if err != nil { //	при ошибке в создании структур хранения в базе данных, прерываем работу приложения
+			if err != nil { //	при ошибке в создании структур хранения в базе данных, прерываем работу конструктора
 				return nil, err
 			}
 		}
@@ -47,19 +47,19 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 		if file != "" { //	если задан FILE_STORAGE_PATH
 			//	порождаем reader и writer для файла-хранилища URL
 			fileReader, err = NewReader(file)
-			if err != nil {
+			if err != nil {	//	при ошибке создания reader, прерываем работу конструктора
 				return nil, err
 			}
 			fileWriter, err = NewWriter(file)
-			if err != nil {
+			if err != nil {	//	при ошибке создания writer, прерываем работу конструктора
 				return nil, err
 			}
 			//	производим первичное заполнение хранилища URL в оперативной памяти из файла-хранилища URL
 			err := InitialURLFulfilment(&s)
-			if err != nil {
+			if err != nil {	//	при ошибке первичного заполнения хранилища URL, прерываем работу конструктора
 				return nil, err
 			}
 		}
 	}
-	return strg, nil //	возращаем выбранный источник данных для URL
+	return strg, nil //	если всё прошло ОК, то возращаем выбранный источник данных для URL
 }
