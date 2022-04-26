@@ -34,8 +34,7 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 	}
 
 	//	 запускаем SQL-statement на исполнение
-	_, err := stmt.Exec(hash, userID, longURL)
-	if err != nil {
+	if _, err := stmt.Exec(hash, userID, longURL); err != nil {
 		return err
 	}
 
