@@ -7,7 +7,7 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 )
 
-// initial - функция конструктор, инициализирующая хранилище URL и интерфейсы работы с файлом, хранящим URL
+// NewDatasource - функция конструктор, инициализирующая хранилище URL и интерфейсы работы с файлом, хранящим URL
 func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 	//	Приоритетность в использовании ресурсов хранения информации URL (по убыванию приоритета):
 	//	1.	Внешняя база данных, параметры соединения с которой задаются через DATABASE_DSN
@@ -47,16 +47,16 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 		if file != "" { //	если задан FILE_STORAGE_PATH
 			//	порождаем reader и writer для файла-хранилища URL
 			fileReader, err = NewReader(file)
-			if err != nil {	//	при ошибке создания reader, прерываем работу конструктора
+			if err != nil { //	при ошибке создания reader, прерываем работу конструктора
 				return nil, err
 			}
 			fileWriter, err = NewWriter(file)
-			if err != nil {	//	при ошибке создания writer, прерываем работу конструктора
+			if err != nil { //	при ошибке создания writer, прерываем работу конструктора
 				return nil, err
 			}
 			//	производим первичное заполнение хранилища URL в оперативной памяти из файла-хранилища URL
 			err := InitialURLFulfilment(&s)
-			if err != nil {	//	при ошибке первичного заполнения хранилища URL, прерываем работу конструктора
+			if err != nil { //	при ошибке первичного заполнения хранилища URL, прерываем работу конструктора
 				return nil, err
 			}
 		}
