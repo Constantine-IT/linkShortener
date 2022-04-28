@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"net/url"
 )
 
 //	CreateShortURLBatchHandler - обработчик POST с пакетом URL в виде JSON
@@ -32,7 +31,7 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 	//        "original_url": "<URL для сокращения>"
 	//    }
 	type incomingList struct {
-		ShortURL string `json:""`
+		Hash []string `json:""`
 	}
 	app.InfoLog.Println(string(jsonURL))
 	//	создаеём экземпляр структуры для заполнения из JSON запроса
@@ -48,16 +47,8 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 	}
 
 	//	прогоняем цикл по всем строкам входящего списка URL
-	for i := range incomingURLlist {
-		//	проверяем URL на допустимый синтаксис
-		if _, err := url.ParseRequestURI(incomingURLlist[i].ShortURL); err != nil {
-			http.Error(w, "Error with URL parsing", http.StatusBadRequest)
-			app.ErrorLog.Println("Error with URL parsing" + err.Error())
-			return
-		}
-
-		//	изготавливаем shortURL и сохраняем в БД связку строку (HASH + <original_URL> + UserID)
-		_, err := app.saveURLtoDB(incomingURLlist[i].ShortURL, requestUserID.Value)
+	for _, hash := range incomingURLlist {
+		_, err := app.saveURLtoDB(hash.Hash[0], requestUserID.Value)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			app.ErrorLog.Println("URL save error:" + err.Error())
