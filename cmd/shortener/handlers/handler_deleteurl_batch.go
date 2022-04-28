@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-//	CreateShortURLBatchHandler - обработчик POST с пакетом URL в виде JSON
+//	DeleteURLByUserIDHandler - обработчик DELETE со списком HASH в виде JSON
 func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -26,19 +26,11 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	//	описываем структуру JSON в запросе -  {
-	//        "correlation_id": "<строковый идентификатор>",
-	//        "original_url": "<URL для сокращения>"
-	//    }
-	type incomingList struct {
-		Hash []string `json:""`
-	}
-	app.InfoLog.Println(string(jsonURL))
-	//	создаеём экземпляр структуры для заполнения из JSON запроса
-	incomingURLlist := make([]incomingList, 0)
+	//	создаеём slice для заполнения из JSON запроса - {[ "a", "b", "c", "d", ...]}
+	var hashes []string
 
 	//	парсим JSON из запроса и записываем результат в экземпляр структуры incomingURLlist
-	err = json.Unmarshal(jsonURL, &incomingURLlist)
+	err = json.Unmarshal(jsonURL, &hashes)
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -46,14 +38,11 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	//	прогоняем цикл по всем строкам входящего списка URL
-	for _, hash := range incomingURLlist {
-		_, err := app.saveURLtoDB(hash.Hash[0], requestUserID.Value)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			app.ErrorLog.Println("URL save error:" + err.Error())
-			return
-		}
+	//	отправляем список HASH для удаления из базы данных
+	if err := app.Datasource.DeleteByHashes(hashes, requestUserID.Value); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.ErrorLog.Println("URL delete error:" + err.Error())
+		return
 	}
 
 	// Изготавливаем и возвращаем ответ, вставляя список коротких URL в тело ответа в JSON виде

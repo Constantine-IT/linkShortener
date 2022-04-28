@@ -41,6 +41,11 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 	return nil
 }
 
+// DeleteByHashes - метод для пометки записей в базе данных как удаленные по их HASH и UserID
+func (s *Storage) DeleteByHashes(hash []string, userID string) error {
+	return nil
+}
+
 // Get - Метод для нахождения <original_URL> и UserID по HASH
 func (s *Storage) Get(hash string) (longURL string, userID string, flg bool) {
 

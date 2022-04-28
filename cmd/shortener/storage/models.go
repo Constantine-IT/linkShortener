@@ -6,6 +6,7 @@ import "errors"
 //	может реализовываться базой данных (Database) или структурами в оперативной памяти (Storage)
 type Datasource interface {
 	Insert(hash, longURL, userID string) error
+	DeleteByHashes(hash []string, userID string) error
 	Get(hash string) (longURL, userID string, flg bool)
 	GetByLongURL(longURL string) (hash string, flg bool)
 	GetByUserID(userID string) ([]HashURLrow, bool)

@@ -28,9 +28,10 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 
 			//	готовим SQL-statement для создания таблицы shorten_urls, если её не существует
 			stmt := `create table if not exists "shorten_urls" (
-							"hash" text constraint hash_pk primary key not null,
+						"hash" text constraint hash_pk primary key not null,
    						"longurl" text constraint unique_longurl unique not null,
-   						"userid" text not null)`
+   						"userid" text not null,
+                        "deleted" boolean not null)`
 			_, err := db.DB.Exec(stmt)
 			if err != nil { //	при ошибке в создании структур хранения в базе данных, прерываем работу конструктора
 				return nil, err
