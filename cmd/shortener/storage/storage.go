@@ -47,16 +47,16 @@ func (s *Storage) DeleteByHashes(hash []string, userID string) error {
 }
 
 // Get - Метод для нахождения <original_URL> и UserID по HASH
-func (s *Storage) Get(hash string) (longURL string, userID string, flg bool) {
+func (s *Storage) Get(hash string) (longURL string, userID string, flg int) {
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	//	если записи с запрашиваемым HASH нет в базе, то выставялем FLAG в положение FALSE
 	if _, ok := s.Data[hash]; !ok {
-		return "", "", false
+		return "", "", 0
 	}
-	return s.Data[hash].longURL, s.Data[hash].userID, true
+	return s.Data[hash].longURL, s.Data[hash].userID, 1
 }
 
 // GetByLongURL - Метод для нахождения HASH по <original_URL>

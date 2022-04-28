@@ -52,6 +52,9 @@ func (d *Database) DeleteByHashes(hashes []string, userID string) error {
 
 	//	готовим SQL-statement для обновления статуса удаленных строк в базе данных
 	stmt, err := tx.Prepare(`update "shorten_urls" set "deleted"=true where "hash" = $1 and "userid" = $2`)
+	if err != nil {
+		return err
+	}
 	for _, hash := range hashes {
 		//	 запускаем SQL-statement на исполнение
 		if _, err := stmt.Exec(hash, userID); err != nil {
@@ -62,16 +65,20 @@ func (d *Database) DeleteByHashes(hashes []string, userID string) error {
 }
 
 // Get - метод для нахождения <original_URL> и UserID по HASH
-func (d *Database) Get(hash string) (longURL, userID string, flg bool) {
+func (d *Database) Get(hash string) (longURL, userID string, flg int) {
 	var url string
 	var user string
+	var isDeleted bool
 
-	stmt := `select "longurl", "userid" from "shorten_urls" where "hash" = $1 and "deleted"=false`
-	err := d.DB.QueryRow(stmt, hash).Scan(&url, &user)
+	stmt := `select "longurl", "userid", "deleted"from "shorten_urls" where "hash" = $1`
+	err := d.DB.QueryRow(stmt, hash).Scan(&url, &user, &isDeleted)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", "", false
+		return "", "", 0
 	}
-	return url, user, true
+	if isDeleted {
+		return url, user, 1
+	}
+	return url, user, 2
 }
 
 // GetByLongURL - метод для нахождения HASH по <original_URL>

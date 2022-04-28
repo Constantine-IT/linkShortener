@@ -7,7 +7,7 @@ import "errors"
 type Datasource interface {
 	Insert(hash, longURL, userID string) error
 	DeleteByHashes(hash []string, userID string) error
-	Get(hash string) (longURL, userID string, flg bool)
+	Get(hash string) (longURL, userID string, flg int)
 	GetByLongURL(longURL string) (hash string, flg bool)
 	GetByUserID(userID string) ([]HashURLrow, bool)
 	Close() error
