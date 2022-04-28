@@ -39,7 +39,7 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 	}
 
 	//	отправляем список HASH для удаления из базы данных
-	if err := app.Datasource.DeleteByHashes(hashes, requestUserID.Value); err != nil {
+	if err := app.Datasource.Delete(hashes, requestUserID.Value); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.ErrorLog.Println("URL delete error:" + err.Error())
 		return

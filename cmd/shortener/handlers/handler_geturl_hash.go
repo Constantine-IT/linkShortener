@@ -8,9 +8,6 @@ import (
 
 //	GetShortURLHandler - обработчик GET на адрес короткого URL, возращает начальный URL по его короткой версии
 func (app *Application) GetShortURLHandler(w http.ResponseWriter, r *http.Request) {
-	var flg int
-	var longURL = ""
-
 	hash := chi.URLParam(r, "hashURL")
 
 	//	проверяем указан ли HASH в коротком URL
@@ -21,7 +18,7 @@ func (app *Application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Находим в базе <original_URL> соответствующий запрошенному HASH
-	longURL, _, flg = app.Datasource.Get(hash)
+	longURL, flg := app.Datasource.Get(hash)
 
 	switch flg {
 	case 0:
@@ -33,7 +30,7 @@ func (app *Application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 		w.Header().Set("Location", longURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	case 2:
-		// Изготавливаем и возвращаем ответ со статусом 410 Gone - удаленный из базы адрес
+		// Изготавливаем и возвращаем ответ со статусом 410 Gone - адрес удалён из базы
 		w.WriteHeader(http.StatusGone)
 
 	}

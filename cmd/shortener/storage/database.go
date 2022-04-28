@@ -11,9 +11,6 @@ type Database struct {
 	DB *sql.DB
 }
 
-//	db - рабочий экземпляр структуры Database
-//var db Database
-
 // Insert - метод для сохранения связки HASH и (<original_URL> + UserID)
 func (d *Database) Insert(hash, longURL, userID string) error {
 	//	пустые значения URL или UserID к вставке в хранилище не допускаются
@@ -42,8 +39,8 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 	return tx.Commit() //	при успешном выполнении вставки - фиксируем транзакцию
 }
 
-// DeleteByHashes - метод для пометки записей в базе данных как удаленные по их HASH и UserID
-func (d *Database) DeleteByHashes(hashes []string, userID string) error {
+// Delete - метод помечает записи в базе данных, как удаленные по их HASH и UserID
+func (d *Database) Delete(hashes []string, userID string) error {
 	//	начинаем тразакцию
 	tx, err := d.DB.Begin()
 	if err != nil {
@@ -67,20 +64,18 @@ func (d *Database) DeleteByHashes(hashes []string, userID string) error {
 }
 
 // Get - метод для нахождения <original_URL> и UserID по HASH
-func (d *Database) Get(hash string) (longURL, userID string, flg int) {
-	var url string
-	var user string
+func (d *Database) Get(hash string) (longURL string, flg int) {
 	var isDeleted bool
 
-	stmt := `select "longurl", "userid", "deleted"from "shorten_urls" where "hash" = $1`
-	err := d.DB.QueryRow(stmt, hash).Scan(&url, &user, &isDeleted)
+	stmt := `select "longurl", "deleted"from "shorten_urls" where "hash" = $1`
+	err := d.DB.QueryRow(stmt, hash).Scan(&longURL, &isDeleted)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", "", 0
+		return "", 0
 	}
 	if isDeleted {
-		return url, user, 2
+		return "", 2
 	}
-	return url, user, 1
+	return longURL, 1
 }
 
 // GetByLongURL - метод для нахождения HASH по <original_URL>
@@ -119,7 +114,7 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 
 //	Close - метод, закрывающий reader и writer для файла-хранилища URL, а также connect к базе данных
 func (d *Database) Close() error {
-
+	//	при остановке сервера connect к базе данных
 	err := d.DB.Close()
 	if err != nil {
 		return err

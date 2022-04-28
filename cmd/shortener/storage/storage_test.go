@@ -40,7 +40,7 @@ func TestInsert(t *testing.T) {
 			if err != nil {
 				t.Errorf("Error in INSERT method: %s", err.Error())
 			}
-			gotLongURL, _, gotFlag := s.Get(tt.want.shortURL)
+			gotLongURL, gotFlag := s.Get(tt.want.shortURL)
 
 			if (gotFlag == 1) && (gotLongURL != tt.want.longURL) {
 				t.Errorf("GET return longURL = %v, but want %v", gotLongURL, tt.want.longURL)

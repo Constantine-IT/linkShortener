@@ -12,13 +12,11 @@ type Storage struct {
 
 // Insert - Метод для сохранения связки HASH и (<original_URL> + UserID)
 func (s *Storage) Insert(hash, longURL, userID string) error {
-
 	//	пустые значения URL или UserID к вставке в хранилище не допускаются
 	if hash == "" || longURL == "" || userID == "" {
 		return ErrEmptyNotAllowed
 	}
-
-	//	Блокируем структуру храниения в опративной памяти на время записи информации
+	//	Блокируем структуру храниения в оперативной памяти на время записи информации
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -41,27 +39,26 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 	return nil
 }
 
-// DeleteByHashes - метод для пометки записей в базе данных как удаленные по их HASH и UserID
-func (s *Storage) DeleteByHashes(hash []string, userID string) error {
+// Delete - метод помечает записи в базе данных, как удаленные по их HASH и UserID
+func (s *Storage) Delete(hash []string, userID string) error {
 	return nil
 }
 
-// Get - Метод для нахождения <original_URL> и UserID по HASH
-func (s *Storage) Get(hash string) (longURL string, userID string, flg int) {
-
+// Get - метод для нахождения <original_URL> и UserID по HASH
+func (s *Storage) Get(hash string) (longURL string, flg int) {
+	// блокируем хранилище URL на время считывания информации
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	//	если записи с запрашиваемым HASH нет в базе, то выставялем FLAG в положение FALSE
+	//	если записи с запрашиваемым HASH нет в базе, то выставялем FLAG в положение 0
 	if _, ok := s.Data[hash]; !ok {
-		return "", "", 0
+		return "", 0
 	}
-	return s.Data[hash].longURL, s.Data[hash].userID, 1
+	return s.Data[hash].longURL, 1
 }
 
-// GetByLongURL - Метод для нахождения HASH по <original_URL>
+// GetByLongURL - метод для нахождения HASH по <original_URL>
 func (s *Storage) GetByLongURL(longURL string) (hash string, flg bool) {
-
 	// блокируем хранилище URL на время считывания информации
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -90,7 +87,6 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 			hashRows = append(hashRows, HashURLrow{hash, row.longURL})
 		}
 	}
-
 	//	если записей с таким UserID не найдено - выставляем FLAG в положение FALSE
 	if len(hashRows) == 0 {
 		return nil, false
@@ -101,18 +97,12 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 }
 
 func (s *Storage) Close() error {
-	var err error
-
-	//	при остановке сервера отложенно закрываем reader и writer для файла-хранилища URL
-	err = fileReader.Close()
-	if err != nil {
+	//	при остановке сервера закрываем reader и writer для файла-хранилища URL
+	if err := fileReader.Close(); err != nil {
 		return err
 	}
-
-	err = fileWriter.Close()
-	if err != nil {
+	if err := fileWriter.Close(); err != nil {
 		return err
 	}
-
 	return nil
 }
