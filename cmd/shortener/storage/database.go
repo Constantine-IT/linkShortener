@@ -76,9 +76,9 @@ func (d *Database) Get(hash string) (longURL, userID string, flg int) {
 		return "", "", 0
 	}
 	if isDeleted {
-		return url, user, 1
+		return url, user, 2
 	}
-	return url, user, 2
+	return url, user, 1
 }
 
 // GetByLongURL - метод для нахождения HASH по <original_URL>

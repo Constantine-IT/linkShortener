@@ -42,10 +42,10 @@ func TestInsert(t *testing.T) {
 			}
 			gotLongURL, _, gotFlag := s.Get(tt.want.shortURL)
 
-			if (gotFlag == true) && (gotLongURL != tt.want.longURL) {
+			if (gotFlag == 1) && (gotLongURL != tt.want.longURL) {
 				t.Errorf("GET return longURL = %v, but want %v", gotLongURL, tt.want.longURL)
 			}
-			if (gotFlag == false) && (gotLongURL != tt.want.longURL) {
+			if (gotFlag == 0) && (gotLongURL != tt.want.longURL) {
 				t.Errorf("GET with not existing shortURL, then longURL is empty, but want %v", tt.want.longURL)
 			}
 		})
