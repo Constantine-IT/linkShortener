@@ -16,13 +16,14 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 
 	if dbDSN != "" { //	если задана переменная среды DATABASE_DSN
 		var err error
+		var d Database
 		//	открываем connect с базой данных PostgreSQL 10+
-		db.DB, err = sql.Open("pgx", dbDSN)
+		d.DB, err = sql.Open("pgx", dbDSN)
 		if err != nil { //	при ошибке открытия, прерываем работу конструктора
 			return nil, err
 		}
 		//	тестируем доступность базы данных
-		if err := db.DB.Ping(); err != nil { //	если база недоступна, прерываем работу конструктора
+		if err := d.DB.Ping(); err != nil { //	если база недоступна, прерываем работу конструктора
 			return nil, err
 		} else { //	если база данных доступна - создаём в ней структуры хранения
 
@@ -32,13 +33,13 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
    						"longurl" text constraint unique_longurl unique not null,
    						"userid" text not null,
                         "deleted" boolean not null)`
-			_, err := db.DB.Exec(stmt)
+			_, err := d.DB.Exec(stmt)
 			if err != nil { //	при ошибке в создании структур хранения в базе данных, прерываем работу конструктора
 				return nil, err
 			}
 		}
 		//	если всё прошло успешно, возвращаем в качестве источника данных - базу данных
-		strg = &Database{DB: db.DB}
+		strg = &Database{DB: d.DB}
 	} else { //	если база данных не указана или недоступна
 		//	возвращаем в качестве источника данных - структуру в оперативной памяти
 		s := Storage{Data: make(map[string]RowStorage)}

@@ -3,6 +3,7 @@ package storage
 import (
 	"database/sql"
 	"errors"
+	_ "github.com/jackc/pgx/stdlib"
 )
 
 //	Database - структура хранилища URL, обертывающая пул подключений к базе данных
@@ -11,7 +12,7 @@ type Database struct {
 }
 
 //	db - рабочий экземпляр структуры Database
-var db Database
+//var db Database
 
 // Insert - метод для сохранения связки HASH и (<original_URL> + UserID)
 func (d *Database) Insert(hash, longURL, userID string) error {
@@ -21,7 +22,7 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 	}
 
 	//	начинаем тразакцию
-	tx, err := db.DB.Begin()
+	tx, err := d.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -44,7 +45,7 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 // DeleteByHashes - метод для пометки записей в базе данных как удаленные по их HASH и UserID
 func (d *Database) DeleteByHashes(hashes []string, userID string) error {
 	//	начинаем тразакцию
-	tx, err := db.DB.Begin()
+	tx, err := d.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -55,12 +56,13 @@ func (d *Database) DeleteByHashes(hashes []string, userID string) error {
 	if err != nil {
 		return err
 	}
-	for _, hash := range hashes {
-		//	 запускаем SQL-statement на исполнение
+
+	for _, hash := range hashes { //	 запускаем пакет SQL-statement на исполнение
 		if _, err := stmt.Exec(hash, userID); err != nil {
 			return err
 		}
 	}
+	//	фиксируем транзакцию
 	return tx.Commit()
 }
 
@@ -117,19 +119,8 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 
 //	Close - метод, закрывающий reader и writer для файла-хранилища URL, а также connect к базе данных
 func (d *Database) Close() error {
-	var err error
 
-	err = fileReader.Close()
-	if err != nil {
-		return err
-	}
-
-	err = fileWriter.Close()
-	if err != nil {
-		return err
-	}
-
-	err = db.DB.Close()
+	err := d.DB.Close()
 	if err != nil {
 		return err
 	}

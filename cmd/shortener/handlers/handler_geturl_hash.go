@@ -37,16 +37,4 @@ func (app *Application) GetShortURLHandler(w http.ResponseWriter, r *http.Reques
 		w.WriteHeader(http.StatusGone)
 
 	}
-
-	/*	if !flg {
-			http.Error(w, "There is no such URL in our database!", http.StatusNotFound)
-			app.ErrorLog.Println("There is no such URL in our database!")
-			return
-		}
-
-		// Изготавливаем и возвращаем ответ, вставляя URL в заголовок в поле "location" и делая Redirect на него
-		w.Header().Set("Location", longURL)
-		w.WriteHeader(http.StatusTemporaryRedirect)
-
-	*/
 }
