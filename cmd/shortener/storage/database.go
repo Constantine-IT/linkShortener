@@ -61,7 +61,7 @@ func (d *Database) DeleteByHashes(hashes []string, userID string) error {
 			return err
 		}
 	}
-	return nil
+	return tx.Commit()
 }
 
 // Get - метод для нахождения <original_URL> и UserID по HASH
