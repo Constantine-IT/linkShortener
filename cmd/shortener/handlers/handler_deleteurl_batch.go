@@ -34,7 +34,7 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 	type incomingList struct {
 		ShortURL string `json:""`
 	}
-	app.InfoLog.Println(jsonURL)
+	app.InfoLog.Println(string(jsonURL))
 	//	создаеём экземпляр структуры для заполнения из JSON запроса
 	incomingURLlist := make([]incomingList, 0)
 
