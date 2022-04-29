@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	_ "github.com/jackc/pgx/stdlib"
+	"github.com/lib/pq"
 )
 
 //	Database - структура хранилища URL, обертывающая пул подключений к базе данных
@@ -31,7 +32,7 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 		return err
 	}
 	defer stmt.Close()
-	
+
 	//	 запускаем SQL-statement на исполнение
 	if _, err := stmt.Exec(hash, userID, longURL); err != nil {
 		return err
@@ -50,16 +51,16 @@ func (d *Database) Delete(hashes []string, userID string) error {
 	defer tx.Rollback() //	при ошибке выполнения - откатываем транзакцию
 
 	//	готовим SQL-statement для обновления статуса удаленных строк в базе данных
-	stmt, err := tx.Prepare(`update "shorten_urls" set "deleted"=true where "hash" = $1 and "userid" = $2`)
+	//	обновляем через BATCH UPDATE - вставляя в STATEMENT сразу срез из HASH
+	stmt, err := tx.Prepare(`update "shorten_urls" set "deleted"=true where "hash" = any ($1) and "userid" = $2`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	for _, hash := range hashes { //	 запускаем пакет SQL-statement на исполнение
-		if _, err := stmt.Exec(hash, userID); err != nil {
-			return err
-		}
+	//	 запускаем SQL-statement на исполнение
+	if _, err := stmt.Exec(pq.Array(hashes), userID); err != nil {
+		return err
 	}
 	//	фиксируем транзакцию
 	return tx.Commit()
