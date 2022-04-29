@@ -51,7 +51,8 @@ func (d *Database) Delete(hashes []string, userID string) error {
 	defer tx.Rollback() //	при ошибке выполнения - откатываем транзакцию
 
 	//	готовим SQL-statement для обновления статуса удаленных строк в базе данных
-	stmt, err := tx.Prepare(`update "shorten_urls" set "deleted"=true where "hash" in ($1) and "userid" = $2`)
+	stmt, err := tx.Prepare(`update "shorten_urls" set "deleted"=true where "hash" in ($1)`)
+	//and "userid" = $2`)
 	if err != nil {
 		return err
 	}
@@ -59,7 +60,8 @@ func (d *Database) Delete(hashes []string, userID string) error {
 
 	//for _, hash := range hashes { //	 запускаем пакет SQL-statement на исполнение
 	//if _, err := stmt.Exec(hash, userID); err != nil {
-	if _, err := stmt.Exec(strings.Join(hashes, "\", \""), userID); err != nil {
+	if _, err := stmt.Exec(strings.Join(hashes, "\", \"")); err != nil {
+		//, userID); err != nil {
 		return err
 	}
 	//}
