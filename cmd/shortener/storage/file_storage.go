@@ -100,7 +100,7 @@ func InitialURLFulfilment(s *Storage) error {
 			return err
 		}
 		//	добавляем связку HASH и (<original_URL> + UserID) в хранилище
-		s.Data[readURL.HashURL] = RowStorage{readURL.LongURL, readURL.UserID}
+		s.Data[readURL.HashURL] = RowStorage{readURL.LongURL, readURL.UserID, readURL.IsDeleted}
 	}
 	return nil
 }

@@ -22,14 +22,15 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 
 	//	сохраняем URL в оперативной памяти в структуре Storage
 	//	каждая запись - это сопоставленная с HASH структура из (URL + UserID) - rowStorage
-	s.Data[hash] = RowStorage{longURL, userID}
+	s.Data[hash] = RowStorage{longURL, userID, false}
 	//	если файл для хранения URL не задан, то храним список только в оперативной памяти
 	if fileWriter != nil {
 		//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
 		shortURL := shortenURL{
-			HashURL: hash,
-			LongURL: longURL,
-			UserID:  userID,
+			HashURL:   hash,
+			LongURL:   longURL,
+			UserID:    userID,
+			IsDeleted: true,
 		}
 		//	производим сохранение в файл связки HASH<==>URL+UserID
 		if err := fileWriter.Write(&shortURL); err != nil {
@@ -40,7 +41,31 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 }
 
 // Delete - метод помечает записи в базе данных, как удаленные по их HASH и UserID
-func (s *Storage) Delete(hash []string, userID string) error {
+func (s *Storage) Delete(hashes []string, userID string) error {
+	//	Блокируем структуру храниения в оперативной памяти на время записи информации
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// помечаем строки с HASH из входящего среза как "удалённые", если они принадлежат пользователю с указанным UserID
+	for _, hash := range hashes {
+		if s.Data[hash].userID == userID {
+			s.Data[hash] = RowStorage{s.Data[hash].longURL, userID, true}
+			//	если файл для хранения URL не задан, то храним изменения только в оперативной памяти
+			if fileWriter != nil {
+				//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
+				shortURL := shortenURL{
+					HashURL:   hash,
+					LongURL:   s.Data[hash].longURL,
+					UserID:    userID,
+					IsDeleted: true,
+				}
+				//	производим сохранение в файл, помеченной как "удалённая", связки HASH<==>URL+UserID
+				if err := fileWriter.Write(&shortURL); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -54,6 +79,9 @@ func (s *Storage) Get(hash string) (longURL string, flg int) {
 	if _, ok := s.Data[hash]; !ok {
 		return "", 0
 	}
+	if s.Data[hash].isDeleted == true {
+		return "", 2
+	}
 	return s.Data[hash].longURL, 1
 }
 
@@ -64,9 +92,9 @@ func (s *Storage) GetByLongURL(longURL string) (hash string, flg bool) {
 	defer s.mutex.Unlock()
 
 	//	если записи с запрашиваемым URL нет в базе, то выставялем FLAG в положение FALSE
-	for h, row := range s.Data {
-		if row.longURL == longURL {
-			return h, true
+	for hash, rowStorage := range s.Data {
+		if rowStorage.longURL == longURL && rowStorage.isDeleted == false {
+			return hash, true
 		}
 	}
 	return "", false
@@ -82,9 +110,9 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 	defer s.mutex.Unlock()
 
 	//	отбираем строки с указанным UserID и добавляем пару HASH и <original_URL> из них в исходящий слайс
-	for hash, row := range s.Data {
-		if row.userID == userID {
-			hashRows = append(hashRows, HashURLrow{hash, row.longURL})
+	for hash, rowStorage := range s.Data {
+		if rowStorage.userID == userID && rowStorage.isDeleted == false {
+			hashRows = append(hashRows, HashURLrow{hash, rowStorage.longURL})
 		}
 	}
 	//	если записей с таким UserID не найдено - выставляем FLAG в положение FALSE
