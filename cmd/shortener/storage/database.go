@@ -58,15 +58,16 @@ func (d *Database) Delete(hashes []string, userID string) error {
 	}
 	defer stmt.Close()
 
-	//	 запускаем SQL-statement на исполнение
+	//	запускаем SQL-statement на исполнение передавая в него параметрами список HASH на удаление и UserID
+	//	метка pq.Array нужна, чтобы драйвер понял, что в statement через подстановочную переменную передают массив
 	if _, err := stmt.Exec(pq.Array(hashes), userID); err != nil {
 		return err
 	}
-	//	фиксируем транзакцию
-	return tx.Commit()
+
+	return tx.Commit() //	при успешном выполнении вставки - фиксируем транзакцию
 }
 
-// Get - метод для нахождения <original_URL> и UserID по HASH
+// Get - метод для нахождения <original_URL> по HASH
 func (d *Database) Get(hash string) (longURL string, flg int) {
 	var isDeleted bool
 
@@ -74,23 +75,22 @@ func (d *Database) Get(hash string) (longURL string, flg int) {
 	err := d.DB.QueryRow(stmt, hash).Scan(&longURL, &isDeleted)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", 0
-	}
+	} //	если HASH не найден, возвращаем flag=0
 	if isDeleted {
 		return "", 2
-	}
-	return longURL, 1
+	} //	если HASH найден с пометкой "удалён", возвращаем flag=2
+	return longURL, 1 //	если HASH найден и пометки "удалён" нет, возвращаем flag=1
 }
 
 // GetByLongURL - метод для нахождения HASH по <original_URL>
 func (d *Database) GetByLongURL(longURL string) (hash string, flg bool) {
-	var h string
 
 	stmt := `select "hash" from "shorten_urls" where "longurl" = $1 and "deleted"=false`
-	err := d.DB.QueryRow(stmt, longURL).Scan(&h)
+	err := d.DB.QueryRow(stmt, longURL).Scan(&hash)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", false
 	}
-	return h, true
+	return hash, true
 }
 
 // GetByUserID - метод для нахождения списка сохраненных пар HASH и <original_URL> по UserID
@@ -98,13 +98,13 @@ func (d *Database) GetByUserID(userID string) ([]HashURLrow, bool) {
 	var hash, longurl string
 	hashRows := make([]HashURLrow, 0)
 
-	stmt := `select "hash", "longurl" from "shorten_urls" where "userid" = $1 and "deleted"=false`
+	stmt := `select "hash", "longurl" from "shorten_urls" where "userid" = $1 and "deleted" = false`
 	rows, err := d.DB.Query(stmt, userID)
 	if err != nil || rows.Err() != nil {
 		return nil, false
 	}
 	defer rows.Close()
-	//	перебираем все строки выборки, добавляя связки HASH и <original_URL> в исходящий слайс
+	//	перебираем все строки выборки, добавляя связки HASH и <original_URL> в исходящий срез
 	for rows.Next() {
 		err := rows.Scan(&hash, &longurl)
 		if err != nil {

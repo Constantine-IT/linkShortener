@@ -40,14 +40,12 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 		}
 		//	если всё прошло успешно, возвращаем в качестве источника данных - базу данных
 		strg = &Database{DB: d.DB}
-	} else { //	если база данных не указана или недоступна
-		//	возвращаем в качестве источника данных - структуру в оперативной памяти
+	} else { //	если база данных не указана, возвращаем в качестве источника данных - структуру в оперативной памяти
 		s := Storage{Data: make(map[string]RowStorage)}
 		strg = &s
 
 		//	опционально подключаем файл-хранилище URL
-		if file != "" { //	если задан FILE_STORAGE_PATH
-			//	порождаем reader и writer для файла-хранилища URL
+		if file != "" { //	если задан FILE_STORAGE_PATH, порождаем reader и writer для файла-хранилища URL
 			fileReader, err = NewReader(file)
 			if err != nil { //	при ошибке создания reader, прерываем работу конструктора
 				return nil, err

@@ -17,9 +17,8 @@ func (app *Application) saveURLtoDB(longURL, userID string) (string, error) {
 	hash := fmt.Sprintf("%X", mdSum[0:4])
 
 	//	проверяем, есть ли URL уже в нашей базе данных
-	//	если есть, то возвращаем сохраненный ранее <shorten_URL>, с ошибкой ErrConflictRecord
 	preHash, flg := app.Datasource.GetByLongURL(longURL)
-	if flg {
+	if flg { //	если есть, то возвращаем сохраненный ранее <shorten_URL>, с пометкой ErrConflictRecord
 		app.InfoLog.Printf("%v - %s", storage.ErrConflictRecord, longURL)
 		// Изготавливаем  <shorten_URL> из базового адреса нашего сервера и HASH
 		shortURL := strings.Join([]string{app.BaseURL, preHash}, "/")

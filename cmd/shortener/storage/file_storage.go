@@ -84,13 +84,11 @@ func (c *reader) Close() error {
 
 //	InitialURLFulfilment - метод первичного заполнения хранилища URL из файла сохраненных URL, при старте сервера
 func InitialURLFulfilment(s *Storage) error {
-
 	//	блокируем хранилище URL в оперативной памяти на время заливки данных
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	for {
-		//	считываем записи по одной из файла-хранилища HASH + <original_URL> + UserID
+	for { //	считываем записи по одной из файла-хранилища HASH + <original_URL> + UserID + IsDeleted
 		readURL, err := fileReader.Read()
 		//	когда дойдем до конца файла - выходим из цикла чтения
 		if errors.Is(err, io.EOF) {
@@ -99,7 +97,7 @@ func InitialURLFulfilment(s *Storage) error {
 		if err != nil {
 			return err
 		}
-		//	добавляем связку HASH и (<original_URL> + UserID) в хранилище
+		//	добавляем связку HASH и (<original_URL> + UserID + IsDeleted) в хранилище в оперативной памяти - Storage
 		s.Data[readURL.HashURL] = RowStorage{readURL.LongURL, readURL.UserID, readURL.IsDeleted}
 	}
 	return nil

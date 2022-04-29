@@ -4,16 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 //	GetURLByUserIDHandler - обработчик GET для получения списка URL созданных пользователем с UserID
 func (app *Application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Request) {
-
-	var flg = true
-	var slicedURL []storage.HashURLrow
-
 	//	считываем UserID из cookie запроса
 	requestUserID, err := r.Cookie("userid")
 	if err != nil {
@@ -24,7 +18,7 @@ func (app *Application) GetURLByUserIDHandler(w http.ResponseWriter, r *http.Req
 
 	// Находим в базе URLs принадлежащие пользователю с данным UserID
 	// вызов метода для нахождения в структуре хранения всех пар HASH<==>URL связанных с указанным UserID
-	slicedURL, flg = app.Datasource.GetByUserID(requestUserID.Value)
+	slicedURL, flg := app.Datasource.GetByUserID(requestUserID.Value)
 	if !flg {
 		http.Error(w, "There is no URL from this user in database", http.StatusNoContent)
 		app.InfoLog.Println("There is no URL from this user in our database")

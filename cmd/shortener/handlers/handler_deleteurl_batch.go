@@ -26,10 +26,10 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	//	создаеём slice для заполнения из JSON запроса - {[ "a", "b", "c", "d", ...]}
+	//	создаеём срез для заполнения из JSON запроса - {[ "a", "b", "c", "d", ...]}
 	var hashes []string
 
-	//	парсим JSON из запроса и записываем результат в экземпляр структуры incomingURLlist
+	//	парсим JSON из запроса и записываем результат в срез с HASH
 	err = json.Unmarshal(jsonURL, &hashes)
 	//	проверяем успешно ли парсится JSON
 	if err != nil {
@@ -38,13 +38,13 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	//	отправляем список HASH для удаления из базы данных
+	//	отправляем список HASH для пометки, как "удалённые" в базе данных URL
 	if err := app.Datasource.Delete(hashes, requestUserID.Value); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.ErrorLog.Println("URL delete error:" + err.Error())
 		return
 	}
 
-	// Изготавливаем и возвращаем ответ, вставляя список коротких URL в тело ответа в JSON виде
+	// сообщаем в Response, что задание на "удаление" списка URL принято к исполнению
 	w.WriteHeader(http.StatusAccepted)
 }

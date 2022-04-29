@@ -69,5 +69,5 @@ func main() {
 		ErrorLog: app.ErrorLog,
 		Handler:  app.Routes(),
 	}
-	app.ErrorLog.Fatal(srv.ListenAndServe())
+	errorLog.Fatal(srv.ListenAndServe())
 }
