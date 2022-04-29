@@ -93,12 +93,14 @@ func (s *Storage) GetByLongURL(longURL string) (hash string, flg bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	//	если записи с запрашиваемым URL нет в базе, то выставялем FLAG в положение FALSE
 	for hash, rowStorage := range s.Data {
+		//	если запись с запрашиваемым URL есть в базе, и нет пометки - "удалена",
+		//	то выдаём HASH b выставялем FLAG в положение FALSE
 		if rowStorage.longURL == longURL && !rowStorage.isDeleted {
 			return hash, true
 		}
 	}
+	//	если записи с запрашиваемым URL нет в базе или она "удалена", то выставялем FLAG в положение FALSE
 	return "", false
 }
 
