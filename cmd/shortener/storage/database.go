@@ -30,7 +30,8 @@ func (d *Database) Insert(hash, longURL, userID string) error {
 	if err != nil {
 		return err
 	}
-
+	defer stmt.Close()
+	
 	//	 запускаем SQL-statement на исполнение
 	if _, err := stmt.Exec(hash, userID, longURL); err != nil {
 		return err
@@ -53,6 +54,7 @@ func (d *Database) Delete(hashes []string, userID string) error {
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 
 	for _, hash := range hashes { //	 запускаем пакет SQL-statement на исполнение
 		if _, err := stmt.Exec(hash, userID); err != nil {
