@@ -50,7 +50,7 @@ func (d *Database) Delete(hashes []string, userID string) error {
 	defer tx.Rollback() //	при ошибке выполнения - откатываем транзакцию
 
 	//	готовим SQL-statement для обновления статуса удаленных строк в базе данных
-	stmt, err := tx.Prepare(`update "shorten_urls" set "deleted"=true where "hash" = any ($1)`)
+	stmt, err := tx.Prepare(`update "shorten_urls" set "deleted"=true where "hash" = any ($1::string[])`)
 	//and "userid" = $2`)
 	if err != nil {
 		return err
