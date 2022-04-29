@@ -79,7 +79,7 @@ func (s *Storage) Get(hash string) (longURL string, flg int) {
 	if _, ok := s.Data[hash]; !ok {
 		return "", 0
 	}
-	if s.Data[hash].isDeleted == true {
+	if s.Data[hash].isDeleted {
 		return "", 2
 	}
 	return s.Data[hash].longURL, 1
@@ -93,7 +93,7 @@ func (s *Storage) GetByLongURL(longURL string) (hash string, flg bool) {
 
 	//	если записи с запрашиваемым URL нет в базе, то выставялем FLAG в положение FALSE
 	for hash, rowStorage := range s.Data {
-		if rowStorage.longURL == longURL && rowStorage.isDeleted == false {
+		if rowStorage.longURL == longURL && !rowStorage.isDeleted {
 			return hash, true
 		}
 	}
@@ -111,7 +111,7 @@ func (s *Storage) GetByUserID(userID string) ([]HashURLrow, bool) {
 
 	//	отбираем строки с указанным UserID и добавляем пару HASH и <original_URL> из них в исходящий слайс
 	for hash, rowStorage := range s.Data {
-		if rowStorage.userID == userID && rowStorage.isDeleted == false {
+		if rowStorage.userID == userID && !rowStorage.isDeleted {
 			hashRows = append(hashRows, HashURLrow{hash, rowStorage.longURL})
 		}
 	}
