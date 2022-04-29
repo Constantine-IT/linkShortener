@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	_ "github.com/jackc/pgx/stdlib"
+	"strings"
 )
 
 //	Database - структура хранилища URL, обертывающая пул подключений к базе данных
@@ -58,7 +59,7 @@ func (d *Database) Delete(hashes []string, userID string) error {
 
 	//for _, hash := range hashes { //	 запускаем пакет SQL-statement на исполнение
 	//if _, err := stmt.Exec(hash, userID); err != nil {
-	if _, err := stmt.Exec(hashes, userID); err != nil {
+	if _, err := stmt.Exec(strings.Join(hashes, ", "), userID); err != nil {
 		return err
 	}
 	//}
