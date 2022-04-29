@@ -21,16 +21,16 @@ func (s *Storage) Insert(hash, longURL, userID string) error {
 	defer s.mutex.Unlock()
 
 	//	сохраняем URL в оперативной памяти в структуре Storage
-	//	каждая запись - это сопоставленная с HASH структура из (URL + UserID) - rowStorage
+	//	каждая запись - это сопоставленная с HASH структура из (URL + UserID + IsDeleted) - rowStorage
 	s.Data[hash] = RowStorage{longURL, userID, false}
 	//	если файл для хранения URL не задан, то храним список только в оперативной памяти
-	if fileWriter != nil {
+	if fileWriter != nil { //	если задан, то логируем изменения также и в нём
 		//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
 		shortURL := shortenURL{
 			HashURL:   hash,
 			LongURL:   longURL,
 			UserID:    userID,
-			IsDeleted: true,
+			IsDeleted: false,
 		}
 		//	производим сохранение в файл связки HASH<==>URL+UserID
 		if err := fileWriter.Write(&shortURL); err != nil {
@@ -49,9 +49,11 @@ func (s *Storage) Delete(hashes []string, userID string) error {
 	// помечаем строки с HASH из входящего среза как "удалённые", если они принадлежат пользователю с указанным UserID
 	for _, hash := range hashes {
 		if s.Data[hash].userID == userID {
+			//	сохраняем изменения в оперативной памяти в структуре Storage
+			//	каждая запись - это сопоставленная с HASH структура из (URL + UserID + IsDeleted) - rowStorage
 			s.Data[hash] = RowStorage{s.Data[hash].longURL, userID, true}
 			//	если файл для хранения URL не задан, то храним изменения только в оперативной памяти
-			if fileWriter != nil {
+			if fileWriter != nil { //	если задан, то логируем изменения также и в нём
 				//	создаем экземпляр структуры хранения связки HASH<==>URL+UserID
 				shortURL := shortenURL{
 					HashURL:   hash,
