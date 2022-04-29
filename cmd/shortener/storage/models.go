@@ -6,7 +6,8 @@ import "errors"
 //	может реализовываться базой данных (Database) или структурами в оперативной памяти (Storage)
 type Datasource interface {
 	Insert(hash, longURL, userID string) error
-	Get(hash string) (longURL, userID string, flg bool)
+	Delete(hash []string, userID string) error
+	Get(hash string) (longURL string, flg int)
 	GetByLongURL(longURL string) (hash string, flg bool)
 	GetByUserID(userID string) ([]HashURLrow, bool)
 	Close() error
@@ -22,16 +23,18 @@ type HashURLrow struct {
 //	shortenURL - структура для чтения/записи информации в файле-хранилище URL в виде JSON
 //	используется в методах Storage.Insert и InitialURLFulfilment
 type shortenURL struct {
-	HashURL string `json:"hash-url"`
-	LongURL string `json:"long-url"`
-	UserID  string `json:"user-id"`
+	HashURL   string `json:"hash-url"`
+	LongURL   string `json:"long-url"`
+	UserID    string `json:"user-id"`
+	IsDeleted bool   `json:"is-deleted"`
 }
 
 //	RowStorage - структура записи в хранилище URL в оперативной памяти
 //	используется для формирования структуры Storage и метода Storage.Insert
 type RowStorage struct {
-	longURL string
-	userID  string
+	longURL   string
+	userID    string
+	isDeleted bool
 }
 
 //	ErrConflictRecord - ошибка возникающая, когда пытаемся вставить в базу запись c уже существующим URL

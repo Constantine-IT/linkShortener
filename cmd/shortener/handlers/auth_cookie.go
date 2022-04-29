@@ -10,11 +10,11 @@ import (
 
 //	AuthCookie - middleware проверяющее наличие Cookie - "userid" в Request,
 //	- если такая cookie там есть, проверяем её на подлинность,
-//	- если такой cookie нет, или она не проходит проверку подлинности, то генерируем новый userid,
-//	шифруем его с помощью симметричного алгоритма AES и вставляем в Response.
+//	- если такой cookie нет, или она не проходит проверку подлинности, то генерируем новый cookie с userid,
+//	шифруем его с помощью симметричного алгоритма AES и вставляем в Response и Request.
 func (app *Application) AuthCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//	слайс длиной aes.BlockSize = 16 байт - переменная, в которую будет помещаться информация при шифровке/расшифровке
+		//	срез длиной aes.BlockSize = 16 байт - переменная, в которую будет помещаться информация при шифровке/расшифровке
 		authCookie := make([]byte, aes.BlockSize)
 
 		//	секретный ключ симметричного шифрования. Длина ключа - 16 байт.
@@ -29,7 +29,7 @@ func (app *Application) AuthCookie(next http.Handler) http.Handler {
 			app.ErrorLog.Fatal(err)
 		}
 
-		//	проверяем на наличие в запросе cookie с "userid"
+		//	проверяем наличие в запросе cookie с "userid"
 		if requestUserID, err := r.Cookie("userid"); err == nil {
 			// если "userid" задан, то декодируем "userid" в тип []byte, и проверяем его на подлинность
 			requestUserIDByte, err := hex.DecodeString(requestUserID.Value)
@@ -44,9 +44,10 @@ func (app *Application) AuthCookie(next http.Handler) http.Handler {
 				return //	если ДА, то проверка подлинности пройдена
 			}
 		}
-		//	если cookie "userid" отсутствует, или не прошло проверку подлинности, то генерируем новый UserID длиной 10 байт,
+
+		//	если cookie с "userid" отсутствует, или не прошло проверку подлинности, то генерируем новый UserID длиной 10 байт,
 		userID, _ := generateRandom(10)
-		//	добавляем к нему проверочную фразу - nonce (длиной 6 байт), получаем slice из 16 байт - размер блока для AES.
+		//	добавляем к нему проверочную фразу - nonce (длиной 6 байт), получаем срез из 16 байт - размер блока AES.
 		//	всё что больше размера блока AES - алгоритм обрезал бы.
 		aesblock.Encrypt(authCookie, append(userID, nonce...)) // зашифровываем (UserID + nonce) в переменную authCookie
 

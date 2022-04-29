@@ -40,8 +40,9 @@ func (app *Application) Routes() chi.Router {
 	//	Эндпоинт POST / принимает в теле запроса в виде текста строку URL для сокращения и возвращает ответ с кодом 201 и сокращённым URL в виде текстовой строки в теле.
 	//	Эндпоинт POST /api/shorten - аналогичен предыдущему, но принимает в теле запроса JSON-объект {"url":"<some_url>"} и возвращает в теле ответа JSON-объект {"result":"<shorten_url>"}.
 	//	Эндпоинт POST /api/shorten/batch, принимает в теле запроса множество URL для сокращения в формате JSON и возвращает сокращенные URL в JSON формате
-
+	//	Эндпоинт DELETE /api/user/urls, принимает задания на удаление списка ранее сформированных URL
 	r.Route("/", func(r chi.Router) {
+		r.Delete("/api/user/urls", app.DeleteURLByUserIDHandler)
 		r.Get("/api/user/urls", app.GetURLByUserIDHandler)
 		r.Get("/{hashURL}", app.GetShortURLHandler)
 		r.Get("/ping", app.PingDataBaseHandler)

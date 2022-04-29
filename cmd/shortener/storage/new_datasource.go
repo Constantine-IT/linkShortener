@@ -16,36 +16,36 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 
 	if dbDSN != "" { //	если задана переменная среды DATABASE_DSN
 		var err error
+		var d Database
 		//	открываем connect с базой данных PostgreSQL 10+
-		db.DB, err = sql.Open("pgx", dbDSN)
+		d.DB, err = sql.Open("pgx", dbDSN)
 		if err != nil { //	при ошибке открытия, прерываем работу конструктора
 			return nil, err
 		}
 		//	тестируем доступность базы данных
-		if err := db.DB.Ping(); err != nil { //	если база недоступна, прерываем работу конструктора
+		if err := d.DB.Ping(); err != nil { //	если база недоступна, прерываем работу конструктора
 			return nil, err
 		} else { //	если база данных доступна - создаём в ней структуры хранения
 
 			//	готовим SQL-statement для создания таблицы shorten_urls, если её не существует
 			stmt := `create table if not exists "shorten_urls" (
-							"hash" text constraint hash_pk primary key not null,
+						"hash" text constraint hash_pk primary key not null,
    						"longurl" text constraint unique_longurl unique not null,
-   						"userid" text not null)`
-			_, err := db.DB.Exec(stmt)
+   						"userid" text not null,
+                        "deleted" boolean not null)`
+			_, err := d.DB.Exec(stmt)
 			if err != nil { //	при ошибке в создании структур хранения в базе данных, прерываем работу конструктора
 				return nil, err
 			}
 		}
 		//	если всё прошло успешно, возвращаем в качестве источника данных - базу данных
-		strg = &Database{DB: db.DB}
-	} else { //	если база данных не указана или недоступна
-		//	возвращаем в качестве источника данных - структуру в оперативной памяти
+		strg = &Database{DB: d.DB}
+	} else { //	если база данных не указана, возвращаем в качестве источника данных - структуру в оперативной памяти
 		s := Storage{Data: make(map[string]RowStorage)}
 		strg = &s
 
 		//	опционально подключаем файл-хранилище URL
-		if file != "" { //	если задан FILE_STORAGE_PATH
-			//	порождаем reader и writer для файла-хранилища URL
+		if file != "" { //	если задан FILE_STORAGE_PATH, порождаем reader и writer для файла-хранилища URL
 			fileReader, err = NewReader(file)
 			if err != nil { //	при ошибке создания reader, прерываем работу конструктора
 				return nil, err

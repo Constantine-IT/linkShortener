@@ -18,8 +18,7 @@ func (app *Application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 	//	в переменной responseStatus - будем хранить статус ответа:
 	responseStatus := http.StatusCreated
 
-	//	считываем UserID из cookie запроса
-	requestUserID, err := r.Cookie("userid")
+	requestUserID, err := r.Cookie("userid") //	считываем "userid" из cookie запроса
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.ErrorLog.Println("There is no userid in request cookie:" + err.Error())
@@ -41,6 +40,7 @@ func (app *Application) CreateShortURLHandler(w http.ResponseWriter, r *http.Req
 		app.ErrorLog.Println("Error with URL parsing:" + err.Error())
 		return
 	}
+
 	//	изготавливаем shortURL и сохраняем в базу связку HASH<==>longURL
 	shortURL, err := app.saveURLtoDB(longURL, requestUserID.Value)
 	if errors.Is(err, storage.ErrConflictRecord) {
