@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/internal/storage"
 )
 
 //	saveURLtoDB - вспомогательная функция, создающая HASH из связки (<original_URL> + UserID),

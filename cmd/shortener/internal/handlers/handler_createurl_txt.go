@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/internal/storage"
 )
 
 //	CreateShortURLHandler - обработчик POST с URL в виде текста

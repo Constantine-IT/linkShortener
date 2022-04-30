@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/internal/storage"
 )
 
 //	These are integration tests with following flow:

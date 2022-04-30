@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/handlers"
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/internal/handlers"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/internal/storage"
 )
 
 func main() {

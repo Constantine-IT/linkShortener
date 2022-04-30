@@ -3,11 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/internal/storage"
 	"io"
 	"net/http"
 	"net/url"
-
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
 )
 
 //	CreateShortURLJSONHandler - обработчик POST с URL в виде JSON

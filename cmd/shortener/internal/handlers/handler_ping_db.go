@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/Constantine-IT/linkShortener/cmd/shortener/storage"
+	"github.com/Constantine-IT/linkShortener/cmd/shortener/internal/storage"
 )
 
 //	PingDataBaseHandler - обработчик проверки доступности базы данных через GET /ping
