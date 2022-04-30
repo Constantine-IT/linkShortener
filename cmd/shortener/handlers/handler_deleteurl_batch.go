@@ -38,12 +38,10 @@ func (app *Application) DeleteURLByUserIDHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	//	отправляем список HASH для пометки, как "удалённые" в базе данных URL
-	if err := app.Datasource.Delete(hashes, requestUserID.Value); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.ErrorLog.Println("URL delete error:" + err.Error())
-		return
-	}
+	// отправляем список HASH для пометки, как "удалённые" в базе данных URL,
+	// делаем это асинхронно, не дожидаясь выполнения задания
+	// каким-либо образом оповещать пользователя об успешности или неуспешности операции "удаления" не нужно
+	go app.Datasource.Delete(hashes, requestUserID.Value)
 
 	// сообщаем в Response, что задание на "удаление" списка URL принято к исполнению
 	w.WriteHeader(http.StatusAccepted)
