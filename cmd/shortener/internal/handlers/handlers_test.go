@@ -115,7 +115,7 @@ func TestHandlersResponse(t *testing.T) {
 			want: want{
 				statusCode:  http.StatusCreated,
 				contentType: "application/json",
-				body:        "[{\"correlation_id\":\"20488f9d-8d24-4087-bb48-e029ea4c8cd5\",\"short_url\":\"http://127.0.0.1:8080/F61E9C62\"},{\"correlation_id\":\"8674b82c-981a-4f22-9b10-1e955384193d\",\"short_url\":\"http://127.0.0.1:8080/542EAE7F\"}]",
+				body:        `[{"correlation_id":"20488f9d-8d24-4087-bb48-e029ea4c8cd5","short_url":"http://127.0.0.1:8080/F61E9C62"},{"correlation_id":"8674b82c-981a-4f22-9b10-1e955384193d","short_url":"http://127.0.0.1:8080/542EAE7F"}]`,
 			},
 		},
 		{
@@ -126,7 +126,7 @@ func TestHandlersResponse(t *testing.T) {
 			want: want{
 				statusCode:  http.StatusOK,
 				contentType: "application/json",
-				body:        "[{\"short_url\":\"http://127.0.0.1:8080/F61E9C62\",\"original_url\":\"http://sviv8b6.biz/r6xab3g\"},{\"short_url\":\"http://127.0.0.1:8080/542EAE7F\",\"original_url\":\"http://kseyxy.biz/ooyowbjb\"}]",
+				body:        `[{"short_url":"http://127.0.0.1:8080/F61E9C62","original_url":"http://sviv8b6.biz/r6xab3g"},{"short_url":"http://127.0.0.1:8080/542EAE7F","original_url":"http://kseyxy.biz/ooyowbjb"}]`,
 			},
 		},
 	}
@@ -148,7 +148,11 @@ func TestHandlersResponse(t *testing.T) {
 			defer resp.Body.Close()
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 			assert.Equal(t, tt.want.contentType, resp.Header.Get("Content-Type"))
-			assert.Equal(t, tt.want.body, body)
+			if resp.Header.Get("Content-Type") == "application/json" {
+				assert.JSONEq(t, tt.want.body, body)
+			} else {
+				assert.Equal(t, tt.want.body, body)
+			}
 		})
 	}
 }
