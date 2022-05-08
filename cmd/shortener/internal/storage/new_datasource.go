@@ -8,17 +8,17 @@ import (
 )
 
 // NewDatasource - функция конструктор, инициализирующая хранилище URL и интерфейсы работы с файлом, хранящим URL
-func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
+func NewDatasource(DatabaseDSN, FileStorage string) (strg Datasource, err error) {
 	//	Приоритетность в использовании ресурсов хранения информации URL (по убыванию приоритета):
 	//	1.	Внешняя база данных, параметры соединения с которой задаются через DATABASE_DSN
 	//	2.	Если БД не задана, то используем файловое хранилище (задаваемое через FILE_STORAGE_PATH) и оперативную память
 	//	3.	Если не заданы ни БД, ни файловое хранилище, то работаем только с оперативной памятью - структура storage.Storage
 
-	if dbDSN != "" { //	если задана переменная среды DATABASE_DSN
+	if DatabaseDSN != "" { //	если задана переменная среды DATABASE_DSN
 		var err error
 		var d Database
 		//	открываем connect с базой данных PostgreSQL 10+
-		d.DB, err = sql.Open("pgx", dbDSN)
+		d.DB, err = sql.Open("pgx", DatabaseDSN)
 		if err != nil { //	при ошибке открытия, прерываем работу конструктора
 			return nil, err
 		}
@@ -45,12 +45,12 @@ func NewDatasource(dbDSN, file string) (strg Datasource, err error) {
 		strg = &s
 
 		//	опционально подключаем файл-хранилище URL
-		if file != "" { //	если задан FILE_STORAGE_PATH, порождаем reader и writer для файла-хранилища URL
-			fileReader, err = NewReader(file)
+		if FileStorage != "" { //	если задан FILE_STORAGE_PATH, порождаем reader и writer для файла-хранилища URL
+			fileReader, err = NewReader(FileStorage)
 			if err != nil { //	при ошибке создания reader, прерываем работу конструктора
 				return nil, err
 			}
-			fileWriter, err = NewWriter(file)
+			fileWriter, err = NewWriter(FileStorage)
 			if err != nil { //	при ошибке создания writer, прерываем работу конструктора
 				return nil, err
 			}
